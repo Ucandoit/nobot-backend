@@ -14,25 +14,32 @@ import javax.annotation.Resource;
 @RequestMapping(value = "/api/rest/auction")
 public class AuctionResource {
 
-    @Resource
-    private AuctionService auctionService;
+  @Resource private AuctionService auctionService;
 
-    @RequestMapping(value = "/startSniping/{login}", method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Boolean> startSniping(@PathVariable String login) {
-        auctionService.snipeAH(login);
-        return new ResponseEntity<>(true, HttpStatus.OK);
-    }
+  @RequestMapping(
+      value = "/startSniping/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> startSniping(@PathVariable String login) {
+    auctionService.snipeAH(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 
-    @RequestMapping(value = "stopSniping/{login}", method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Boolean> stopSniping(@PathVariable String login) {
-        auctionService.stopSnipeAH(login);
-        return new ResponseEntity<>(true, HttpStatus.OK);
-    }
+  @RequestMapping(
+      value = "stopSniping/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> stopSniping(@PathVariable String login) {
+    auctionService.stopSnipeAH(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 
-    @RequestMapping(value = "startAll", method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Boolean> startAll() {
-        auctionService.snipeAH();
-        return new ResponseEntity<>(true, HttpStatus.OK);
-    }
-
+  @RequestMapping(
+      value = "startAll",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> startAll() {
+    auctionService.snipeAH();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 }

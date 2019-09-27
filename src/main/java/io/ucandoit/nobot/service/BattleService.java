@@ -13,16 +13,14 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class BattleService {
 
-    @Resource
-    private AccountRepository accountRepository;
+  @Resource private AccountRepository accountRepository;
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(20);
+  private ExecutorService executorService = Executors.newFixedThreadPool(20);
 
-    public void startBattle(String login) {
-        Account account = accountRepository.getOne(login);
-        if (account != null) {
-            log.info("Start battling for account {}.", account.getLogin());
-
-        }
+  public void startBattle(String login) {
+    Account account = accountRepository.getOne(login);
+    if (account != null) {
+      log.info("Start battling for account {}.", account.getLogin());
     }
+  }
 }

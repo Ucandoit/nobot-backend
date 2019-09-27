@@ -9,9 +9,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class HttpClientConfig {
 
-    @Bean
-    public HttpClient httpClient() {
-        log.info("Initialising HTTP client");
-        return new HttpClient();
-    }
+  @Bean
+  public HttpClient httpClient() {
+    log.info("Initialising HTTP client");
+    return new HttpClient();
+  }
 }

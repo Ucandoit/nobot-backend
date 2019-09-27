@@ -13,27 +13,26 @@ import javax.annotation.Resource;
 @Scope("prototype")
 public class BattleTask implements Runnable {
 
-    @Resource
-    private HttpClient httpClient;
+  @Resource private HttpClient httpClient;
 
-    private String cookie;
+  private String cookie;
 
-    private String login;
+  private String login;
 
-    @Override
-    public void run() {
-        try {
-            String token = HttpUtils.requestToken(httpClient, cookie);
-        } catch (Exception e) {
-            log.error("Error while battling for account {}.", login);
-        }
+  @Override
+  public void run() {
+    try {
+      String token = HttpUtils.requestToken(httpClient, cookie);
+    } catch (Exception e) {
+      log.error("Error while battling for account {}.", login);
     }
+  }
 
-    public void setCookie(String cookie) {
-        this.cookie = cookie;
-    }
+  public void setCookie(String cookie) {
+    this.cookie = cookie;
+  }
 
-    public void setLogin(String login) {
-        this.login = login;
-    }
+  public void setLogin(String login) {
+    this.login = login;
+  }
 }

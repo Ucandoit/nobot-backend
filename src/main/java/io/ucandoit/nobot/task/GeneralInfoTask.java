@@ -11,14 +11,14 @@ import java.util.function.Supplier;
 @Scope("prototype")
 public class GeneralInfoTask implements Supplier {
 
-    private String login;
+  private String login;
 
-    @Override
-    public Object get() {
-        return login;
-    }
+  @Override
+  public Object get() {
+    return login;
+  }
 
-    public void setLogin(String login) {
-        this.login = login;
-    }
+  public void setLogin(String login) {
+    this.login = login;
+  }
 }

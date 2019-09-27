@@ -13,45 +13,41 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Slf4j
 public class NobotApplication extends SpringBootServletInitializer {
 
-    private static final String SPRING_PROFILE_DEVELOPMENT = "dev";
+  private static final String SPRING_PROFILE_DEVELOPMENT = "dev";
 
-    public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(NobotApplication.class);
-        app.setAdditionalProfiles(addDefaultProfile(new SimpleCommandLinePropertySource(args)));
-        app.run(args);
+  public static void main(String[] args) {
+    SpringApplication app = new SpringApplication(NobotApplication.class);
+    app.setAdditionalProfiles(addDefaultProfile(new SimpleCommandLinePropertySource(args)));
+    app.run(args);
+  }
 
+  @Override
+  protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+    return application.profiles(addDefaultProfile(null)).sources(NobotApplication.class);
+  }
+
+  /**
+   * Add a default profile.
+   *
+   * <p>Please use -Dspring.profiles.active= xxx
+   *
+   * @param source SimpleCommandLinePropertySource
+   * @return profile
+   */
+  private static String addDefaultProfile(SimpleCommandLinePropertySource source) {
+    String profile;
+    if (source != null && source.containsProperty("spring.profiles.active")) {
+      profile = source.getProperty("spring.profiles.active");
+    } else {
+      profile = System.getProperty("spring.profiles.active");
     }
 
-    @Override
-    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return application.profiles(addDefaultProfile(null)).sources(NobotApplication.class);
+    if (profile != null) {
+      log.info("Running with Spring profile(s) : {}", profile);
+      return profile;
+    } else {
+      log.warn("No Spring profile configured, running with development configuration");
+      return SPRING_PROFILE_DEVELOPMENT;
     }
-
-    /**
-     * Add a default profile.
-     * <p>
-     * Please use -Dspring.profiles.active= xxx
-     * </p>
-     *
-     * @param source SimpleCommandLinePropertySource
-     * @return profile
-     */
-    private static String addDefaultProfile(SimpleCommandLinePropertySource source) {
-        String profile;
-        if (source != null && source.containsProperty("spring.profiles.active")) {
-            profile = source.getProperty("spring.profiles.active");
-        } else {
-            profile = System.getProperty("spring.profiles.active");
-        }
-
-        if (profile != null) {
-            log.info("Running with Spring profile(s) : {}", profile);
-            return profile;
-        } else {
-            log.warn("No Spring profile configured, running with development configuration");
-            return SPRING_PROFILE_DEVELOPMENT;
-        }
-    }
-
-
+  }
 }

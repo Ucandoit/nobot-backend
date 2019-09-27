@@ -15,12 +15,15 @@ import java.io.UnsupportedEncodingException;
 @RequestMapping(value = "/api/rest/wrestle")
 public class WrestleResource {
 
-    @Resource
-    private WrestleService wrestleService;
+  @Resource private WrestleService wrestleService;
 
-    @RequestMapping(value = "/startWrestling", method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Boolean> startWrestling(@RequestParam String login) throws UnsupportedEncodingException {
-        wrestleService.startWrestling(login);
-        return new ResponseEntity<>(true, HttpStatus.OK);
-    }
+  @RequestMapping(
+      value = "/startWrestling",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> startWrestling(@RequestParam String login)
+      throws UnsupportedEncodingException {
+    wrestleService.startWrestling(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 }

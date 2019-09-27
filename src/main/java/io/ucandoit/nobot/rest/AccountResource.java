@@ -13,13 +13,14 @@ import javax.annotation.Resource;
 @RequestMapping(value = "/api/rest/account")
 public class AccountResource {
 
-    @Resource
-    private AccountService accountService;
+  @Resource private AccountService accountService;
 
-    @RequestMapping(value = "/info", method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Boolean> generalInfo() {
-        accountService.getAccountsGeneralInfo();
-        return new ResponseEntity<>(true, HttpStatus.OK);
-    }
-
+  @RequestMapping(
+      value = "/info",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> generalInfo() {
+    accountService.getAccountsGeneralInfo();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 }

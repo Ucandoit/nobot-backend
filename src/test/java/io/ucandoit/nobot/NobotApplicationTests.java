@@ -13,31 +13,30 @@ import java.util.GregorianCalendar;
 @SpringBootTest
 public class NobotApplicationTests {
 
-    @Test
-    public void contextLoads() {
-        int delay = calculateInitialDelay(0);
-        System.out.println(delay);
-    }
+  @Test
+  public void contextLoads() {
+    int delay = calculateInitialDelay(0);
+    System.out.println(delay);
+  }
 
-    private int calculateInitialDelay(int startHour) {
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.setTime(new Date());
-        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
-        Calendar targetCalendar = GregorianCalendar.getInstance();
-        targetCalendar.setTime(calendar.getTime());
-        if (currentHour >= startHour) {
-            if (currentHour < startHour + 3) {
-                return 0;
-            } else {
-                targetCalendar.add(Calendar.DATE, 1);
-            }
-        }
-        targetCalendar.set(Calendar.HOUR_OF_DAY, startHour);
-        targetCalendar.set(Calendar.MINUTE, 0);
-        targetCalendar.set(Calendar.SECOND, 30);
-        targetCalendar.set(Calendar.MILLISECOND, 0);
-        long diff = targetCalendar.getTime().getTime() - new Date().getTime();
-        return (int) (diff / 1000);
+  private int calculateInitialDelay(int startHour) {
+    Calendar calendar = GregorianCalendar.getInstance();
+    calendar.setTime(new Date());
+    int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+    Calendar targetCalendar = GregorianCalendar.getInstance();
+    targetCalendar.setTime(calendar.getTime());
+    if (currentHour >= startHour) {
+      if (currentHour < startHour + 3) {
+        return 0;
+      } else {
+        targetCalendar.add(Calendar.DATE, 1);
+      }
     }
-
+    targetCalendar.set(Calendar.HOUR_OF_DAY, startHour);
+    targetCalendar.set(Calendar.MINUTE, 0);
+    targetCalendar.set(Calendar.SECOND, 30);
+    targetCalendar.set(Calendar.MILLISECOND, 0);
+    long diff = targetCalendar.getTime().getTime() - new Date().getTime();
+    return (int) (diff / 1000);
+  }
 }

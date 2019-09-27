@@ -13,23 +13,22 @@ import java.util.Date;
 @Data
 public class Account {
 
-    @Id
-    @Column(name = "login")
-    private String login;
+  @Id
+  @Column(name = "login")
+  private String login;
 
-    @Column(name = "name")
-    private String name;
+  @Column(name = "name")
+  private String name;
 
-    @Column(name = "cookie")
-    private String cookie;
+  @Column(name = "cookie")
+  private String cookie;
 
-    @Column(name = "expiration_date")
-    private Date expirationDate;
+  @Column(name = "expiration_date")
+  private Date expirationDate;
 
-    @Column(name = "start_hour")
-    private Integer startHour;
+  @Column(name = "start_hour")
+  private Integer startHour;
 
-    @Column(name = "enabled")
-    private Boolean enabled;
-
+  @Column(name = "enabled")
+  private Boolean enabled;
 }

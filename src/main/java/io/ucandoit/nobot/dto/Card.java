@@ -7,18 +7,17 @@ import lombok.ToString;
 @ToString(exclude = "requestParams")
 public class Card {
 
-    private String tradeBuyId;
+  private String tradeBuyId;
 
-    private String cardBuyId;
+  private String cardBuyId;
 
-    private String rarity;
+  private String rarity;
 
-    private String name;
+  private String name;
 
-    private Integer price;
+  private Integer price;
 
-    private Integer currentNP;
+  private Integer currentNP;
 
-    private String requestParams;
-
+  private String requestParams;
 }

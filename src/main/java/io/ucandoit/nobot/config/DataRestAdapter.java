@@ -16,21 +16,23 @@ import java.util.Set;
 @Slf4j
 public class DataRestAdapter implements RepositoryRestConfigurer {
 
-    private static final String BASE_PATH = "/api/rest";
+  private static final String BASE_PATH = "/api/rest";
 
-    @Value("io.ucandoit.nobot.domain")
-    private String entitiesBasePackage;
+  @Value("io.ucandoit.nobot.domain")
+  private String entitiesBasePackage;
 
-    @Override
-    public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
-        config.setBasePath(BASE_PATH);
-        config.setReturnBodyOnCreate(true);
-        config.setReturnBodyOnUpdate(true);
-        Reflections reflections = new Reflections(entitiesBasePackage, new SubTypesScanner(false), new TypeAnnotationsScanner());
-        Set<Class<?>> entities = reflections.getTypesAnnotatedWith(Entity.class);
-        for (Class<?> entity : entities) {
-            log.info("Expose Ids for {}", entity);
-            config.exposeIdsFor(entity);
-        }
+  @Override
+  public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
+    config.setBasePath(BASE_PATH);
+    config.setReturnBodyOnCreate(true);
+    config.setReturnBodyOnUpdate(true);
+    Reflections reflections =
+        new Reflections(
+            entitiesBasePackage, new SubTypesScanner(false), new TypeAnnotationsScanner());
+    Set<Class<?>> entities = reflections.getTypesAnnotatedWith(Entity.class);
+    for (Class<?> entity : entities) {
+      log.info("Expose Ids for {}", entity);
+      config.exposeIdsFor(entity);
     }
+  }
 }

@@ -14,13 +14,14 @@ import javax.annotation.Resource;
 @RequestMapping(value = "/api/rest/battle")
 public class BattleResource {
 
-    @Resource
-    private BattleService battleService;
+  @Resource private BattleService battleService;
 
-    @RequestMapping(value = "/startBattle/{login}", method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Boolean> startSniping(@PathVariable String login) {
-        battleService.startBattle(login);
-        return new ResponseEntity<>(true, HttpStatus.OK);
-    }
-
+  @RequestMapping(
+      value = "/startBattle/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> startSniping(@PathVariable String login) {
+    battleService.startBattle(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 }

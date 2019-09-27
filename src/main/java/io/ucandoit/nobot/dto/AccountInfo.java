@@ -7,34 +7,33 @@ import lombok.ToString;
 @ToString
 public class AccountInfo {
 
-    private String login;
+  private String login;
 
-    private String name;
+  private String name;
 
-    private int np;
+  private int np;
 
-    private int food;
+  private int food;
 
-    private int maxFood;
+  private int maxFood;
 
-    private int fire;
+  private int fire;
 
-    private int earth;
+  private int earth;
 
-    private int wind;
+  private int wind;
 
-    private int water;
+  private int water;
 
-    private int sky;
+  private int sky;
 
-    private int maxFire;
+  private int maxFire;
 
-    private int maxEarth;
+  private int maxEarth;
 
-    private int maxWind;
+  private int maxWind;
 
-    private int maxWater;
+  private int maxWater;
 
-    private int maxSky;
-
+  private int maxSky;
 }

@@ -23,186 +23,206 @@ import java.util.GregorianCalendar;
 @Scope("prototype")
 public class WarTask implements Runnable {
 
-    @Resource
-    private HttpClient httpClient;
+  @Resource private HttpClient httpClient;
 
-    private String cookie;
+  private String cookie;
 
-    private String login;
+  private String login;
 
-    private String token;
+  private String token;
 
-    private Date tokenGenerateTime;
+  private Date tokenGenerateTime;
 
-    private boolean fp;
+  private boolean fp;
 
-    private boolean npc;
+  private boolean npc;
 
-    private int line;
+  private int line;
 
-    private Integer endDay;
+  private Integer endDay;
 
-    @Override
-    public void run() {
-        try {
-            checkToken();
-            if (token != null) {
-                boolean availability = checkAvailability();
-                if (availability) {
-                    String startUrl = setupWar();
-                    String warId = startUrl.split("\\?")[1];
-                    String postData = warId + "&action=go&mc=0&fp=" + (fp ? "1" : "0") + "&npc=" + (npc ? "1" : "0");
-                    httpClient.makePOSTRequest(startUrl.split("\\?")[0], "POST", postData, token);
-                }
-            }
-        } catch (Exception e) {
-            log.error("War task error:", e);
+  @Override
+  public void run() {
+    try {
+      checkToken();
+      if (token != null) {
+        boolean availability = checkAvailability();
+        if (availability) {
+          String startUrl = setupWar();
+          String warId = startUrl.split("\\?")[1];
+          String postData =
+              warId + "&action=go&mc=0&fp=" + (fp ? "1" : "0") + "&npc=" + (npc ? "1" : "0");
+          httpClient.makePOSTRequest(startUrl.split("\\?")[0], "POST", postData, token);
         }
+      }
+    } catch (Exception e) {
+      log.error("War task error:", e);
+    }
+  }
+
+  private void checkToken() {
+    boolean updateToken = false;
+    if (token == null || token.equals("")) {
+      updateToken = true;
+    } else {
+      if (tokenGenerateTime != null) {
+        long diff = new Date().getTime() - tokenGenerateTime.getTime();
+        if (diff > 30 * 60 * 1000) {
+          updateToken = true;
+        }
+      }
+    }
+    if (updateToken) {
+      log.info("Updating token for {}", login);
+      token = HttpUtils.requestToken(httpClient, cookie);
+      tokenGenerateTime = new Date();
+    }
+  }
+
+  private boolean checkAvailability() {
+    log.info("Checking availability for {}.", login);
+    String villageUrl = "http://210.140.157.168/village.htm";
+    ResponseEntity<String> response = httpClient.makePOSTRequest(villageUrl, "GET", null, token);
+    JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+    Document doc = Jsoup.parse(obj.getJSONObject(villageUrl).getString("body"));
+
+    Element doing = doc.selectFirst("#doing");
+    if (doing != null && doing.toString().contains("合戦")) {
+      log.info("{} is in war.", login);
+      return false;
     }
 
-    private void checkToken() {
-        boolean updateToken = false;
-        if (token == null || token.equals("")) {
-            updateToken = true;
-        } else {
-            if (tokenGenerateTime != null) {
-                long diff = new Date().getTime() - tokenGenerateTime.getTime();
-                if (diff > 30 * 60 * 1000) {
-                    updateToken = true;
-                }
-            }
-        }
-        if (updateToken) {
-            log.info("Updating token for {}", login);
-            token = HttpUtils.requestToken(httpClient, cookie);
-            tokenGenerateTime = new Date();
-        }
+    int currentFood = Integer.parseInt(doc.selectFirst("#element_food").text());
+    int currentFire = Integer.parseInt(doc.selectFirst("#element_fire").text());
+    int currentEarth = Integer.parseInt(doc.selectFirst("#element_earth").text());
+    int currentWind = Integer.parseInt(doc.selectFirst("#element_wind").text());
+    int currentWater = Integer.parseInt(doc.selectFirst("#element_water").text());
+    int currentSky = Integer.parseInt(doc.selectFirst("#element_sky").text());
+
+    if (currentFire >= 3000
+        || currentEarth >= 3000
+        || currentWind >= 3000
+        || currentWater >= 3000
+        || currentSky >= 3000) {
+      int convertedFood =
+          currentFire / 20
+              + currentEarth / 20
+              + currentWind / 20
+              + currentWater / 20
+              + currentSky / 20;
+      if (convertedFood > 0 && convertedFood + currentFood <= 7500) {
+        currentFood += convertedFood;
+        trade(doc);
+      } else {
+        log.warn("Food exceeded for {}.", login);
+      }
     }
 
-    private boolean checkAvailability() {
-        log.info("Checking availability for {}.", login);
-        String villageUrl = "http://210.140.157.168/village.htm";
-        ResponseEntity<String> response = httpClient.makePOSTRequest(villageUrl, "GET", null, token);
-        JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
-        Document doc = Jsoup.parse(obj.getJSONObject(villageUrl).getString("body"));
+    if ((fp && currentFood < 1860) || (npc && currentFood < 1860) || (!fp && currentFood < 620)) {
+      log.warn("Short in food for {}.", login);
+      return false;
+    }
 
-        Element doing = doc.selectFirst("#doing");
-        if (doing != null && doing.toString().contains("合戦")) {
-            log.info("{} is in war.", login);
-            return false;
-        }
-
-        int currentFood = Integer.parseInt(doc.selectFirst("#element_food").text());
-        int currentFire = Integer.parseInt(doc.selectFirst("#element_fire").text());
-        int currentEarth = Integer.parseInt(doc.selectFirst("#element_earth").text());
-        int currentWind = Integer.parseInt(doc.selectFirst("#element_wind").text());
-        int currentWater = Integer.parseInt(doc.selectFirst("#element_water").text());
-        int currentSky = Integer.parseInt(doc.selectFirst("#element_sky").text());
-
-        if (currentFire >= 3000 || currentEarth >= 3000 || currentWind >= 3000 || currentWater >= 3000 || currentSky >= 3000) {
-            int convertedFood = currentFire / 20 + currentEarth / 20 + currentWind / 20 + currentWater / 20 + currentSky / 20;
-            if (convertedFood > 0 && convertedFood + currentFood <= 7500) {
-                currentFood += convertedFood;
-                trade(doc);
-            } else {
-                log.warn("Food exceeded for {}.", login);
-            }
-        }
-
-        if ((fp && currentFood < 1860) || (npc && currentFood < 1860)  || (!fp && currentFood < 620)) {
-            log.warn("Short in food for {}.", login);
-            return false;
-        }
-
-        // optimise for next day
-        Date now = new Date();
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.setTime(now);
-        if (endDay != null && calendar.get(Calendar.DATE) >= endDay - 1) {
-            if (calendar.get(Calendar.HOUR_OF_DAY) >= 7 || calendar.get(Calendar.DATE) == endDay) {
-                log.info("Last day, skip save for next day.");
-                return true;
-            }
-        }
-        Date nextDay = calculateNextDayStartTime(calendar);
-        long diff = nextDay.getTime() - now.getTime();
-        int willGain = (int) (310 * diff / 3600000);
-        log.info("{} will gain {} food til next day.", login, willGain);
-        if (currentFood + willGain < 7500) {
-            log.info("Short in food for next day {}.", login);
-            return false;
-        }
+    // optimise for next day
+    Date now = new Date();
+    Calendar calendar = GregorianCalendar.getInstance();
+    calendar.setTime(now);
+    if (endDay != null && calendar.get(Calendar.DATE) >= endDay - 1) {
+      if (calendar.get(Calendar.HOUR_OF_DAY) >= 7 || calendar.get(Calendar.DATE) == endDay) {
+        log.info("Last day, skip save for next day.");
         return true;
+      }
     }
+    Date nextDay = calculateNextDayStartTime(calendar);
+    long diff = nextDay.getTime() - now.getTime();
+    int willGain = (int) (310 * diff / 3600000);
+    log.info("{} will gain {} food til next day.", login, willGain);
+    if (currentFood + willGain < 7500) {
+      log.info("Short in food for next day {}.", login);
+      return false;
+    }
+    return true;
+  }
 
-    private Date calculateNextDayStartTime(Calendar calendar) {
-        Calendar calendarNextDay = GregorianCalendar.getInstance();
-        calendarNextDay.setTime(calendar.getTime());
-        calendarNextDay.set(Calendar.MILLISECOND, 0);
-        calendarNextDay.set(Calendar.SECOND, 0);
-        calendarNextDay.set(Calendar.MINUTE, 0);
-        calendarNextDay.set(Calendar.HOUR_OF_DAY, 7);
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        if (hour >= 7) {
-            calendarNextDay.add(Calendar.DATE, 1);
-        }
-        return calendarNextDay.getTime();
+  private Date calculateNextDayStartTime(Calendar calendar) {
+    Calendar calendarNextDay = GregorianCalendar.getInstance();
+    calendarNextDay.setTime(calendar.getTime());
+    calendarNextDay.set(Calendar.MILLISECOND, 0);
+    calendarNextDay.set(Calendar.SECOND, 0);
+    calendarNextDay.set(Calendar.MINUTE, 0);
+    calendarNextDay.set(Calendar.HOUR_OF_DAY, 7);
+    int hour = calendar.get(Calendar.HOUR_OF_DAY);
+    if (hour >= 7) {
+      calendarNextDay.add(Calendar.DATE, 1);
     }
+    return calendarNextDay.getTime();
+  }
 
-    private void trade(Document doc) {
-        Element form = doc.selectFirst("#trade-all-form");
-        String actionUrl = form.attr("action");
-        String postData = "";
-        for (Element input : form.children()) {
-            if (postData.length() > 0) {
-                postData += "&";
-            }
-            postData += input.attr("name") + "=" + input.attr("value");
-        }
-        httpClient.makePOSTRequest(actionUrl, "POST", postData, token);
+  private void trade(Document doc) {
+    Element form = doc.selectFirst("#trade-all-form");
+    String actionUrl = form.attr("action");
+    String postData = "";
+    for (Element input : form.children()) {
+      if (postData.length() > 0) {
+        postData += "&";
+      }
+      postData += input.attr("name") + "=" + input.attr("value");
     }
+    httpClient.makePOSTRequest(actionUrl, "POST", postData, token);
+  }
 
-    private String setupWar() throws UnsupportedEncodingException {
-        log.info("Setup war for {} at line {}, fp {}.", login, line, fp);
-        String warUrl = "http://210.140.157.168/war/war_setup.htm";
-        ResponseEntity<String> response = httpClient.makePOSTRequest(warUrl, "GET", null, token);
-        JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
-        Document doc = Jsoup.parse(obj.getJSONObject(warUrl).getString("body"));
-        Element form = doc.selectFirst("#rank_lane_boss_" + line).parent().nextElementSibling().selectFirst("form");
-//        Element form = doc.selectFirst("#rank_lane_" + line).nextElementSibling().selectFirst("form");
-        String postData = "";
-        for (Element input : form.children()) {
-            if (postData.length() > 0) {
-                postData += "&";
-            }
-            postData += input.attr("name") + "=" + input.attr("value");
-        }
-        response = httpClient.makePOSTRequest(warUrl, "POST", postData, token);
-        obj = HttpUtils.responseToJsonObject(response.getBody());
-        return URLDecoder.decode(obj.getJSONObject(warUrl).getJSONObject("headers").getJSONArray("location").get(0).toString(), "UTF-8");
+  private String setupWar() throws UnsupportedEncodingException {
+    log.info("Setup war for {} at line {}, fp {}.", login, line, fp);
+    String warUrl = "http://210.140.157.168/war/war_setup.htm";
+    ResponseEntity<String> response = httpClient.makePOSTRequest(warUrl, "GET", null, token);
+    JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+    Document doc = Jsoup.parse(obj.getJSONObject(warUrl).getString("body"));
+    Element form =
+        doc.selectFirst("#rank_lane_boss_" + line)
+            .parent()
+            .nextElementSibling()
+            .selectFirst("form");
+    //        Element form = doc.selectFirst("#rank_lane_" +
+    // line).nextElementSibling().selectFirst("form");
+    String postData = "";
+    for (Element input : form.children()) {
+      if (postData.length() > 0) {
+        postData += "&";
+      }
+      postData += input.attr("name") + "=" + input.attr("value");
     }
+    response = httpClient.makePOSTRequest(warUrl, "POST", postData, token);
+    obj = HttpUtils.responseToJsonObject(response.getBody());
+    return URLDecoder.decode(
+        obj.getJSONObject(warUrl)
+            .getJSONObject("headers")
+            .getJSONArray("location")
+            .get(0)
+            .toString(),
+        "UTF-8");
+  }
 
-    public void setCookie(String cookie) {
-        this.cookie = cookie;
-    }
+  public void setCookie(String cookie) {
+    this.cookie = cookie;
+  }
 
-    public void setLogin(String login) {
-        this.login = login;
-    }
+  public void setLogin(String login) {
+    this.login = login;
+  }
 
-    public void setFp(boolean fp) {
-        this.fp = fp;
-    }
+  public void setFp(boolean fp) {
+    this.fp = fp;
+  }
 
-    public void setNpc(boolean npc) {
-        this.npc = npc;
-    }
+  public void setNpc(boolean npc) {
+    this.npc = npc;
+  }
 
-    public void setLine(int line) {
-        this.line = line;
-    }
+  public void setLine(int line) {
+    this.line = line;
+  }
 
-    public void setEndDay(int endDay) {
-        this.endDay = endDay;
-    }
+  public void setEndDay(int endDay) {
+    this.endDay = endDay;
+  }
 }

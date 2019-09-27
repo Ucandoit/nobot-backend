@@ -16,23 +16,20 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class WrestleService {
 
-    @Resource
-    private HttpClient httpClient;
+  @Resource private HttpClient httpClient;
 
-    @Resource
-    private AccountRepository accountRepository;
+  @Resource private AccountRepository accountRepository;
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(1);
+  private ExecutorService executorService = Executors.newFixedThreadPool(1);
 
-    public void startWrestling(String login) {
-        Account account = accountRepository.getOne(login);
-        if (account != null) {
-            log.info("Start wrestling for account {}.", account.getName());
-            String token = HttpUtils.requestToken(httpClient, account.getCookie());
-            if (token != null) {
-                executorService.submit(new WrestleTask(httpClient, token, account.getCookie()));
-            }
-        }
+  public void startWrestling(String login) {
+    Account account = accountRepository.getOne(login);
+    if (account != null) {
+      log.info("Start wrestling for account {}.", account.getName());
+      String token = HttpUtils.requestToken(httpClient, account.getCookie());
+      if (token != null) {
+        executorService.submit(new WrestleTask(httpClient, token, account.getCookie()));
+      }
     }
-
+  }
 }

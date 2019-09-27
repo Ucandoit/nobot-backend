@@ -10,25 +10,24 @@ import java.util.Date;
 @Data
 public class Task {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Integer id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "id")
+  private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "login")
-    private Account account;
+  @ManyToOne
+  @JoinColumn(name = "login")
+  private Account account;
 
-    @Column(name = "task_type")
-    private String taskType;
+  @Column(name = "task_type")
+  private String taskType;
 
-    @Column(name = "start_time")
-    private Date startTime;
+  @Column(name = "start_time")
+  private Date startTime;
 
-    @Column(name = "stop_time")
-    private Date stopTime;
+  @Column(name = "stop_time")
+  private Date stopTime;
 
-    @Column(name = "repeat")
-    private Integer repeat;
-
+  @Column(name = "repeat")
+  private Integer repeat;
 }

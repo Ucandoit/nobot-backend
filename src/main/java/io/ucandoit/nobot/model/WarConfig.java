@@ -12,19 +12,19 @@ import javax.persistence.Table;
 @Data
 public class WarConfig {
 
-    @Id
-    @Column(name = "login")
-    private String login;
+  @Id
+  @Column(name = "login")
+  private String login;
 
-    @Column(name = "line")
-    private int line;
+  @Column(name = "line")
+  private int line;
 
-    @Column(name = "fp")
-    private boolean fp;
+  @Column(name = "fp")
+  private boolean fp;
 
-    @Column(name = "enabled")
-    private boolean enabled;
+  @Column(name = "enabled")
+  private boolean enabled;
 
-    @Column(name = "endday")
-    private Integer endDay;
+  @Column(name = "endday")
+  private Integer endDay;
 }
