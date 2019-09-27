@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -26,9 +27,9 @@ public class WrestleService {
     Account account = accountRepository.getOne(login);
     if (account != null) {
       log.info("Start wrestling for account {}.", account.getName());
-      String token = HttpUtils.requestToken(httpClient, account.getCookie());
-      if (token != null) {
-        executorService.submit(new WrestleTask(httpClient, token, account.getCookie()));
+      Optional<String> token = HttpUtils.requestToken(httpClient, account.getCookie());
+      if (token.isPresent()) {
+        executorService.submit(new WrestleTask(httpClient, token.get(), account.getCookie()));
       }
     }
   }

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -39,11 +40,12 @@ public class AccountService {
                 account ->
                     CompletableFuture.supplyAsync(
                         () -> {
-                          String token = HttpUtils.requestToken(httpClient, account.getCookie());
-                          if (token != null) {
+                          Optional<String> token =
+                              HttpUtils.requestToken(httpClient, account.getCookie());
+                          if (token.isPresent()) {
                             String homeUrl = "http://210.140.157.168/village.htm";
                             ResponseEntity<String> response =
-                                httpClient.makePOSTRequest(homeUrl, "GET", null, token);
+                                httpClient.makePOSTRequest(homeUrl, "GET", null, token.get());
                             JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
                             Document doc =
                                 Jsoup.parse(obj.getJSONObject(homeUrl).getString("body"));

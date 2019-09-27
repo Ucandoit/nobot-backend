@@ -74,7 +74,7 @@ public class WarTask implements Runnable {
     }
     if (updateToken) {
       log.info("Updating token for {}", login);
-      token = HttpUtils.requestToken(httpClient, cookie);
+      HttpUtils.requestToken(httpClient, cookie).ifPresent(s -> token = s);
       tokenGenerateTime = new Date();
     }
   }

@@ -13,10 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -59,9 +56,10 @@ public class WarService {
   public void login() {
     List<Account> accounts = accountRepository.findAll();
     for (Account account : accounts) {
-      String token = HttpUtils.requestToken(httpClient, account.getCookie());
-      if (token != null) {
-        httpClient.makePOSTRequest("http://210.140.157.168/world_list.htm", "GET", null, token);
+      Optional<String> token = HttpUtils.requestToken(httpClient, account.getCookie());
+      if (token.isPresent()) {
+        httpClient.makePOSTRequest(
+            "http://210.140.157.168/world_list.htm", "GET", null, token.get());
       }
     }
   }

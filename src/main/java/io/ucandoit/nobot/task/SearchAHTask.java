@@ -65,7 +65,7 @@ public class SearchAHTask implements Runnable {
       }
       log.info("Searching {} for {}", count, login);
       if (token == null || token.equals("")) {
-        token = HttpUtils.requestToken(httpClient, cookie);
+        HttpUtils.requestToken(httpClient, cookie).ifPresent(s -> token = s);
       }
       if (searchUrl == null || searchUrl.equals("")) {
         searchUrl = requestAHPage(token);

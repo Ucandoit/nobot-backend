@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Optional;
 
 @Slf4j
 @Component("battleTask")
@@ -22,7 +23,7 @@ public class BattleTask implements Runnable {
   @Override
   public void run() {
     try {
-      String token = HttpUtils.requestToken(httpClient, cookie);
+      Optional<String> token = HttpUtils.requestToken(httpClient, cookie);
     } catch (Exception e) {
       log.error("Error while battling for account {}.", login);
     }
