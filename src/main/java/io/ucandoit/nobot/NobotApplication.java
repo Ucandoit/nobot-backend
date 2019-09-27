@@ -21,11 +21,6 @@ public class NobotApplication extends SpringBootServletInitializer {
     app.run(args);
   }
 
-  @Override
-  protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-    return application.profiles(addDefaultProfile(null)).sources(NobotApplication.class);
-  }
-
   /**
    * Add a default profile.
    *
@@ -49,5 +44,10 @@ public class NobotApplication extends SpringBootServletInitializer {
       log.warn("No Spring profile configured, running with development configuration");
       return SPRING_PROFILE_DEVELOPMENT;
     }
+  }
+
+  @Override
+  protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+    return application.profiles(addDefaultProfile(null)).sources(NobotApplication.class);
   }
 }

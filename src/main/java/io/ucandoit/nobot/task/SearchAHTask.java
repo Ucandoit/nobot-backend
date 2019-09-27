@@ -103,32 +103,32 @@ public class SearchAHTask implements Runnable {
     this.cookie = cookie;
   }
 
-  public void setTaskId(Integer taskId) {
-    this.taskId = taskId;
-  }
-
   public void setLogin(String login) {
     this.login = login;
-  }
-
-  public void setFuture(ScheduledFuture future) {
-    this.future = future;
-  }
-
-  public void setCount(int count) {
-    this.count = count;
   }
 
   public Integer getTaskId() {
     return taskId;
   }
 
+  public void setTaskId(Integer taskId) {
+    this.taskId = taskId;
+  }
+
   public ScheduledFuture getFuture() {
     return future;
   }
 
+  public void setFuture(ScheduledFuture future) {
+    this.future = future;
+  }
+
   public int getCount() {
     return count;
+  }
+
+  public void setCount(int count) {
+    this.count = count;
   }
 
   private String requestAHPage(String token) throws UnsupportedEncodingException {
