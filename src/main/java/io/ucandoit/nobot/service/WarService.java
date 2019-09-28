@@ -1,9 +1,12 @@
 package io.ucandoit.nobot.service;
 
+import io.ucandoit.nobot.enums.WarStatus;
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
+import io.ucandoit.nobot.model.Parameter;
 import io.ucandoit.nobot.model.WarConfig;
 import io.ucandoit.nobot.repository.AccountRepository;
+import io.ucandoit.nobot.repository.ParameterRepository;
 import io.ucandoit.nobot.repository.WarConfigRepository;
 import io.ucandoit.nobot.task.WarTask;
 import io.ucandoit.nobot.util.HttpUtils;
@@ -13,6 +16,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.transaction.Transactional;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,18 +36,20 @@ public class WarService {
 
   @Resource private BeanFactory beanFactory;
 
+  @Resource private ParameterRepository parameterRepository;
+
   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(50);
 
   private Map<String, ScheduledFuture<?>> futureMap = new HashMap<>();
 
-  //    @Scheduled(cron = "0 59 5 * * *")
+  @Scheduled(cron = "0 59 5 * * *")
   public void dailyStop() {
     log.info("Daily stop.");
     stopAll();
   }
 
-  //    @Scheduled(cron = "0 1 7 * * *")
-  //    @Transactional
+  @Scheduled(cron = "0 1 7 * * *")
+  @Transactional
   public void dailyStart() {
     log.info("Daily start.");
     startAll();
@@ -57,10 +64,8 @@ public class WarService {
     List<Account> accounts = accountRepository.findAll();
     for (Account account : accounts) {
       Optional<String> token = HttpUtils.requestToken(httpClient, account.getCookie());
-      if (token.isPresent()) {
-        httpClient.makePOSTRequest(
-            "http://210.140.157.168/world_list.htm", "GET", null, token.get());
-      }
+      token.ifPresent(
+          s -> httpClient.makePOSTRequest("http://210.140.157.168/world_list.htm", "GET", null, s));
     }
   }
 
@@ -74,6 +79,11 @@ public class WarService {
 
   public void startAll() {
     stopAll();
+    WarStatus warStatus = checkWarStatus(new Date());
+    if (warStatus == WarStatus.STOP) {
+      log.info("War is stopped");
+      return;
+    }
     List<WarConfig> warConfigList = warConfigRepository.findAll();
     for (WarConfig warConfig : warConfigList) {
       if (warConfig.isEnabled()) {
@@ -85,7 +95,7 @@ public class WarService {
             warTask.setLogin(account.getLogin());
             warTask.setLine(warConfig.getLine());
             warTask.setFp(warConfig.isFp());
-            warTask.setEndDay(warConfig.getEndDay());
+            warTask.setLastDay(warStatus == WarStatus.LAST_DAY);
             ScheduledFuture<?> future =
                 executorService.scheduleAtFixedRate(warTask, 0, 120, TimeUnit.SECONDS);
             futureMap.put(account.getLogin(), future);
@@ -100,23 +110,25 @@ public class WarService {
   }
 
   public void startWar(String login, String line, Boolean fp, Boolean npc) {
+    WarStatus warStatus = checkWarStatus(new Date());
+    if (warStatus == WarStatus.STOP) {
+      log.info("War is stopped");
+      return;
+    }
     Account account = accountRepository.getOne(login);
     if (account != null) {
       if (account.getExpirationDate().after(new Date())) {
         ScheduledFuture<?> future = futureMap.get(login);
         if (future != null && !future.isDone()) {
-          future.cancel(false);
+          future.cancel(true);
         }
-        WarConfig warConfig = warConfigRepository.getOne(login);
         WarTask warTask = (WarTask) beanFactory.getBean("warTask");
         warTask.setCookie(account.getCookie());
         warTask.setLogin(account.getLogin());
         warTask.setLine(Integer.parseInt(line));
         warTask.setFp(fp != null && fp);
         warTask.setNpc(npc != null && npc);
-        if (warConfig != null) {
-          warTask.setEndDay(warConfig.getEndDay());
-        }
+        warTask.setLastDay(warStatus == WarStatus.LAST_DAY);
         future = executorService.scheduleAtFixedRate(warTask, 0, 120, TimeUnit.SECONDS);
         futureMap.put(account.getLogin(), future);
       } else {
@@ -130,7 +142,7 @@ public class WarService {
   public void stopWar(String login) {
     ScheduledFuture<?> future = futureMap.get(login);
     if (future != null && !future.isDone()) {
-      future.cancel(false);
+      future.cancel(true);
     }
   }
 
@@ -164,7 +176,7 @@ public class WarService {
 
   public String getWarConfigList() {
     List<WarConfig> warConfigList = warConfigRepository.findAll();
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     for (WarConfig warConfig : warConfigList) {
       sb.append("ID : ")
           .append(warConfig.getLogin())
@@ -182,5 +194,22 @@ public class WarService {
       sb.append(System.lineSeparator());
     }
     return sb.toString();
+  }
+
+  private WarStatus checkWarStatus(Date date) {
+    try {
+      Parameter parameter = parameterRepository.getOne("war.lastDay");
+      Date lastDay = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse(parameter.getValue());
+      if (lastDay.after(date)) {
+        return WarStatus.START;
+      } else {
+        if (date.getTime() - lastDay.getTime() < 24 * 60 * 60 * 1000) {
+          return WarStatus.LAST_DAY;
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return WarStatus.STOP;
   }
 }

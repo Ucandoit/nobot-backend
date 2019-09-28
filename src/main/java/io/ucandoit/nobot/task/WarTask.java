@@ -39,7 +39,7 @@ public class WarTask implements Runnable {
 
   private int line;
 
-  private Integer endDay;
+  private boolean isLastDay;
 
   @Override
   public void run() {
@@ -124,15 +124,13 @@ public class WarTask implements Runnable {
     }
 
     // optimise for next day
+    if (isLastDay) {
+      log.info("Last day, skip save for next day.");
+      return true;
+    }
     Date now = new Date();
     Calendar calendar = GregorianCalendar.getInstance();
     calendar.setTime(now);
-    if (endDay != null && calendar.get(Calendar.DATE) >= endDay - 1) {
-      if (calendar.get(Calendar.HOUR_OF_DAY) >= 7 || calendar.get(Calendar.DATE) == endDay) {
-        log.info("Last day, skip save for next day.");
-        return true;
-      }
-    }
     Date nextDay = calculateNextDayStartTime(calendar);
     long diff = nextDay.getTime() - now.getTime();
     int willGain = (int) (310 * diff / 3600000);
@@ -161,14 +159,14 @@ public class WarTask implements Runnable {
   private void trade(Document doc) {
     Element form = doc.selectFirst("#trade-all-form");
     String actionUrl = form.attr("action");
-    String postData = "";
+    StringBuilder postData = new StringBuilder();
     for (Element input : form.children()) {
       if (postData.length() > 0) {
-        postData += "&";
+        postData.append("&");
       }
-      postData += input.attr("name") + "=" + input.attr("value");
+      postData.append(input.attr("name")).append("=").append(input.attr("value"));
     }
-    httpClient.makePOSTRequest(actionUrl, "POST", postData, token);
+    httpClient.makePOSTRequest(actionUrl, "POST", postData.toString(), token);
   }
 
   private String setupWar() throws UnsupportedEncodingException {
@@ -177,21 +175,20 @@ public class WarTask implements Runnable {
     ResponseEntity<String> response = httpClient.makePOSTRequest(warUrl, "GET", null, token);
     JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
     Document doc = Jsoup.parse(obj.getJSONObject(warUrl).getString("body"));
+    String laneSelectorPrefix = isLastDay ? "#rank_lane_boss_" : "#rank_lane_";
     Element form =
-        doc.selectFirst("#rank_lane_boss_" + line)
+        doc.selectFirst(laneSelectorPrefix + line)
             .parent()
             .nextElementSibling()
             .selectFirst("form");
-    //        Element form = doc.selectFirst("#rank_lane_" +
-    // line).nextElementSibling().selectFirst("form");
-    String postData = "";
+    StringBuilder postData = new StringBuilder();
     for (Element input : form.children()) {
       if (postData.length() > 0) {
-        postData += "&";
+        postData.append("&");
       }
-      postData += input.attr("name") + "=" + input.attr("value");
+      postData.append(input.attr("name")).append("=").append(input.attr("value"));
     }
-    response = httpClient.makePOSTRequest(warUrl, "POST", postData, token);
+    response = httpClient.makePOSTRequest(warUrl, "POST", postData.toString(), token);
     obj = HttpUtils.responseToJsonObject(response.getBody());
     return URLDecoder.decode(
         obj.getJSONObject(warUrl)
@@ -222,7 +219,7 @@ public class WarTask implements Runnable {
     this.line = line;
   }
 
-  public void setEndDay(int endDay) {
-    this.endDay = endDay;
+  public void setLastDay(boolean lastDay) {
+    isLastDay = lastDay;
   }
 }
