@@ -2,7 +2,10 @@ package io.ucandoit.nobot.task;
 
 import io.ucandoit.nobot.dto.Card;
 import io.ucandoit.nobot.http.HttpClient;
+import io.ucandoit.nobot.model.AuctionHistory;
 import io.ucandoit.nobot.model.Task;
+import io.ucandoit.nobot.repository.AccountRepository;
+import io.ucandoit.nobot.repository.AuctionHistoryRepository;
 import io.ucandoit.nobot.repository.TaskRepository;
 import io.ucandoit.nobot.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,10 @@ public class SearchAHTask implements Runnable {
   @Resource private HttpClient httpClient;
 
   @Resource private TaskRepository taskRepository;
+
+  @Resource private AuctionHistoryRepository auctionHistoryRepository;
+
+  @Resource private AccountRepository accountRepository;
 
   private String cookie;
 
@@ -89,6 +96,13 @@ public class SearchAHTask implements Runnable {
           if (card.getCurrentNP() > card.getPrice()) {
             log.info("card found {} for {}. Trying to buy...", card, login);
             requestBuy(card.getRequestParams(), token);
+            AuctionHistory auctionHistory = new AuctionHistory();
+            auctionHistory.setAccount(accountRepository.getOne(login));
+            auctionHistory.setRarity(card.getRarity());
+            auctionHistory.setName(card.getName());
+            auctionHistory.setPrice(card.getPrice());
+            auctionHistory.setSnipeTime(new Date());
+            auctionHistoryRepository.save(auctionHistory);
           }
         } else {
           log.info("Nothing found for {}.", login);
@@ -200,6 +214,11 @@ public class SearchAHTask implements Runnable {
 
   private Card getCardFromHtml(String html) {
     Document doc = Jsoup.parse(html);
+    Element table = doc.selectFirst("#work-headers");
+    if (table == null) {
+      log.warn("{} abandoned for today.", login);
+      return null;
+    }
     Element cat = doc.selectFirst("#buy-list1");
     Element form = doc.selectFirst("#form");
     if (cat != null && form != null) {
