@@ -95,6 +95,7 @@ public class WarService {
             warTask.setLogin(account.getLogin());
             warTask.setLine(warConfig.getLine());
             warTask.setFp(warConfig.isFp());
+            warTask.setNpc(warConfig.isNpc());
             warTask.setLastDay(warStatus == WarStatus.LAST_DAY);
             ScheduledFuture<?> future =
                 executorService.scheduleAtFixedRate(warTask, 0, 120, TimeUnit.SECONDS);

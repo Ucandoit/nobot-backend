@@ -1,0 +1,1 @@
+ALTER TABLE war_config ADD COLUMN npc BOOLEAN DEFAULT false;

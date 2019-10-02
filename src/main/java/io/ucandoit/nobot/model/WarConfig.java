@@ -25,6 +25,6 @@ public class WarConfig {
   @Column(name = "enabled")
   private boolean enabled;
 
-  @Column(name = "endday")
-  private Integer endDay;
+  @Column(name = "npc")
+  private boolean npc;
 }

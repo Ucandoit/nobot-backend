@@ -41,6 +41,8 @@ public class WarTask implements Runnable {
 
   private boolean isLastDay;
 
+  private boolean pcb;
+
   @Override
   public void run() {
     try {
@@ -50,8 +52,19 @@ public class WarTask implements Runnable {
         if (availability) {
           String startUrl = setupWar();
           String warId = startUrl.split("\\?")[1];
-          String postData =
-              warId + "&action=go&mc=0&fp=" + (fp ? "1" : "0") + "&npc=" + (npc ? "1" : "0");
+          String postData = warId + "&action=go&mc=0";
+          if (pcb) {
+            // if pc battle
+            postData += "&fp=" + (fp ? "1" : "0") + "&npc=0";
+          } else {
+            if (!isLastDay) {
+              // if npc battle and not last day
+              postData += "&fp=0&npc=0";
+            } else {
+              // if npc battle and last day
+              postData += "&fp=0&npc=" + (npc ? "1" : "0");
+            }
+          }
           httpClient.makePOSTRequest(startUrl.split("\\?")[0], "POST", postData, token);
         }
       }
@@ -175,6 +188,8 @@ public class WarTask implements Runnable {
     ResponseEntity<String> response = httpClient.makePOSTRequest(warUrl, "GET", null, token);
     JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
     Document doc = Jsoup.parse(obj.getJSONObject(warUrl).getString("body"));
+    Element checkboxPcBattle = doc.selectFirst("#chstat_pcb");
+    pcb = checkboxPcBattle.attr("checked").equals("checked");
     String laneSelectorPrefix = isLastDay ? "#rank_lane_boss_" : "#rank_lane_";
     Element form =
         doc.selectFirst(laneSelectorPrefix + line)
