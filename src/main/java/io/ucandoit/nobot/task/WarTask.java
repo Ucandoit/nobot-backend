@@ -190,12 +190,13 @@ public class WarTask implements Runnable {
     Document doc = Jsoup.parse(obj.getJSONObject(warUrl).getString("body"));
     Element checkboxPcBattle = doc.selectFirst("#chstat_pcb");
     pcb = checkboxPcBattle.attr("checked").equals("checked");
-    String laneSelectorPrefix = isLastDay ? "#rank_lane_boss_" : "#rank_lane_";
     Element form =
-        doc.selectFirst(laneSelectorPrefix + line)
-            .parent()
-            .nextElementSibling()
-            .selectFirst("form");
+        isLastDay
+            ? doc.selectFirst("#rank_lane_boss_" + line)
+                .parent()
+                .nextElementSibling()
+                .selectFirst("form")
+            : doc.selectFirst("#rank_lane_" + line).nextElementSibling().selectFirst("form");
     StringBuilder postData = new StringBuilder();
     for (Element input : form.children()) {
       if (postData.length() > 0) {
