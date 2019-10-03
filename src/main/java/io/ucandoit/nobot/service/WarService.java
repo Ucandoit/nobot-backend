@@ -8,6 +8,7 @@ import io.ucandoit.nobot.model.WarConfig;
 import io.ucandoit.nobot.repository.AccountRepository;
 import io.ucandoit.nobot.repository.ParameterRepository;
 import io.ucandoit.nobot.repository.WarConfigRepository;
+import io.ucandoit.nobot.task.CompleteQuestTask;
 import io.ucandoit.nobot.task.WarTask;
 import io.ucandoit.nobot.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +20,7 @@ import javax.annotation.Resource;
 import javax.transaction.Transactional;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Service
 @Slf4j
@@ -39,6 +37,8 @@ public class WarService {
   @Resource private ParameterRepository parameterRepository;
 
   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(50);
+
+  private ExecutorService questExecutorService = Executors.newFixedThreadPool(50);
 
   private Map<String, ScheduledFuture<?>> futureMap = new HashMap<>();
 
@@ -195,6 +195,16 @@ public class WarService {
       sb.append(System.lineSeparator());
     }
     return sb.toString();
+  }
+
+  public void completeQuest(String login, List<Integer> questIds) {
+    Account account = accountRepository.getOne(login);
+    CompleteQuestTask completeQuestTask =
+        (CompleteQuestTask) beanFactory.getBean("completeQuestTask");
+    completeQuestTask.setLogin(login);
+    completeQuestTask.setCookie(account.getCookie());
+    completeQuestTask.setQuestIds(questIds);
+    questExecutorService.submit(completeQuestTask);
   }
 
   private WarStatus checkWarStatus(Date date) {

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 @RestController
 @RequestMapping(value = "/api/rest/war")
@@ -102,8 +102,20 @@ public class WarResource {
       value = "/login",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
-  public ResponseEntity<Boolean> login() throws UnsupportedEncodingException {
+  public ResponseEntity<Boolean> login() {
     warService.login();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/completeQuest/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> completeQuest(@PathVariable String login, Integer[] questIds) {
+    if (questIds == null || questIds.length == 0) {
+      questIds = new Integer[] {139, 158, 218, 219, 181, 182};
+    }
+    warService.completeQuest(login, Arrays.asList(questIds));
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }
