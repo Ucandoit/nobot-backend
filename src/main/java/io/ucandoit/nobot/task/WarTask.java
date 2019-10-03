@@ -132,7 +132,7 @@ public class WarTask implements Runnable {
     }
 
     String manageDeckUrl = "http://210.140.157.168/card/manage_deck.htm";
-    response = httpClient.makePOSTRequest(villageUrl, "GET", null, token);
+    response = httpClient.makePOSTRequest(manageDeckUrl, "GET", null, token);
     obj = HttpUtils.responseToJsonObject(response.getBody());
     doc = Jsoup.parse(obj.getJSONObject(manageDeckUrl).getString("body"));
     int deckFood = Integer.parseInt(doc.selectFirst(".food").text());
