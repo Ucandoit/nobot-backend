@@ -6,7 +6,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "Task")
+@Table(name = "auction_history")
 @Data
 public class AuctionHistory {
 
