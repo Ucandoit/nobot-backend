@@ -131,8 +131,16 @@ public class WarTask implements Runnable {
       }
     }
 
-    if ((fp && currentFood < 1860) || (npc && currentFood < 1860) || (!fp && currentFood < 620)) {
-      log.warn("Short in food for {}.", login);
+    String manageDeckUrl = "http://210.140.157.168/card/manage_deck.htm";
+    response = httpClient.makePOSTRequest(villageUrl, "GET", null, token);
+    obj = HttpUtils.responseToJsonObject(response.getBody());
+    doc = Jsoup.parse(obj.getJSONObject(manageDeckUrl).getString("body"));
+    int deckFood = Integer.parseInt(doc.selectFirst(".food").text());
+
+    if ((fp && currentFood < (deckFood * 3))
+        || (npc && currentFood < (deckFood * 3))
+        || (!fp && currentFood < deckFood)) {
+      log.warn("Short in food ({}/{}) for {}.", deckFood, currentFood, login);
       return false;
     }
 
