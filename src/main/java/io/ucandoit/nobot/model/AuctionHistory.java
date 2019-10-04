@@ -19,13 +19,18 @@ public class AuctionHistory {
   @JoinColumn(name = "login")
   private Account account;
 
+  @Column(name = "card_rarity")
   private String rarity;
 
+  @Column(name = "card_name")
   private String name;
 
+  @Column(name = "card_price")
   private Integer price;
 
+  @Column(name = "snipe_time")
   private Date snipeTime;
 
+  @Column(name = "bought")
   private Boolean bought;
 }
