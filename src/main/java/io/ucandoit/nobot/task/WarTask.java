@@ -131,11 +131,7 @@ public class WarTask implements Runnable {
       }
     }
 
-    String manageDeckUrl = "http://210.140.157.168/card/manage_deck.htm";
-    response = httpClient.makePOSTRequest(manageDeckUrl, "GET", null, token);
-    obj = HttpUtils.responseToJsonObject(response.getBody());
-    doc = Jsoup.parse(obj.getJSONObject(manageDeckUrl).getString("body"));
-    int deckFood = Integer.parseInt(doc.selectFirst(".food").text());
+    int deckFood = getDeckFood();
 
     if ((fp && currentFood < (deckFood * 3))
         || (npc && currentFood < (deckFood * 3))
@@ -221,6 +217,31 @@ public class WarTask implements Runnable {
             .get(0)
             .toString(),
         "UTF-8");
+  }
+
+  private int getDeckFood() {
+    String manageDeckUrl = "http://210.140.157.168/card/manage_deck.htm";
+    ResponseEntity<String> response = httpClient.makePOSTRequest(manageDeckUrl, "GET", null, token);
+    JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+    Document doc = Jsoup.parse(obj.getJSONObject(manageDeckUrl).getString("body"));
+    int food = 0;
+    int count = 0;
+    for (int i = 1; i <= 5; i++) {
+      Element card = doc.selectFirst("#deck-card" + i);
+      if (card != null) {
+        for (String className : card.selectFirst(".card-face").classNames()) {
+          if (className.startsWith("face-card-id")) {
+            String cardId = className.replace("face-card-id", "");
+            Element cardInfo = doc.selectFirst("#data_form_card-data-id" + cardId);
+            if (cardInfo != null) {
+              food += Integer.parseInt(cardInfo.attr("value").split(",")[8]);
+              count++;
+            }
+          }
+        }
+      }
+    }
+    return food / count;
   }
 
   public void setCookie(String cookie) {
