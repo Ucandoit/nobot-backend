@@ -38,6 +38,7 @@ public class StoryTask implements Runnable {
     try {
       checkToken();
       if (token != null) {
+        httpClient.makePOSTRequest(MAP_URL, "GET", null, token);
         notifyUpdate();
         ResponseEntity<String> response = httpClient.makePOSTRequest(MAP_URL, "GET", null, token);
         JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
@@ -72,10 +73,11 @@ public class StoryTask implements Runnable {
         httpClient.makePOSTRequest(BATTLE_URL, "POST", HttpUtils.buildPostData(form), token);
         log.info("Story task: start battle for {}.", login);
       }
-    } catch (RuntimeException e) {
-      throw e;
     } catch (Exception e) {
       log.error("Story task: error for " + login + " : ", e);
+      if ("Stop".equals(e.getMessage())) {
+        throw e;
+      }
     }
   }
 
