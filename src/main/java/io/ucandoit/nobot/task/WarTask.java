@@ -201,14 +201,7 @@ public class WarTask implements Runnable {
                 .nextElementSibling()
                 .selectFirst("form")
             : doc.selectFirst("#rank_lane_" + line).nextElementSibling().selectFirst("form");
-    StringBuilder postData = new StringBuilder();
-    for (Element input : form.children()) {
-      if (postData.length() > 0) {
-        postData.append("&");
-      }
-      postData.append(input.attr("name")).append("=").append(input.attr("value"));
-    }
-    response = httpClient.makePOSTRequest(warUrl, "POST", postData.toString(), token);
+    response = httpClient.makePOSTRequest(warUrl, "POST", HttpUtils.buildPostData(form), token);
     obj = HttpUtils.responseToJsonObject(response.getBody());
     return URLDecoder.decode(
         obj.getJSONObject(warUrl)

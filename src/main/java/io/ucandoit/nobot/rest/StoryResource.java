@@ -1,0 +1,54 @@
+package io.ucandoit.nobot.rest;
+
+import io.ucandoit.nobot.service.StoryService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+
+@RestController
+@RequestMapping(value = "/api/rest/story")
+public class StoryResource {
+
+  @Resource private StoryService storyService;
+
+  @RequestMapping(
+      value = "/startAll",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> startAll() {
+    storyService.startAll();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/stopAll",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> stopAll() {
+    storyService.stopAll();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/start/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> startStory(@PathVariable String login) {
+    storyService.startStory(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/stop/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> stopStory(@PathVariable String login) {
+    storyService.stopStory(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+}

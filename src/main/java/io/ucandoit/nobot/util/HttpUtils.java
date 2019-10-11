@@ -3,6 +3,7 @@ package io.ucandoit.nobot.util;
 import io.ucandoit.nobot.http.HttpClient;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
+import org.jsoup.nodes.Element;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -37,6 +38,17 @@ public class HttpUtils {
 
   public static JSONObject responseToJsonObject(String response) {
     return new JSONObject(response.substring(response.indexOf('{')));
+  }
+
+  public static String buildPostData(Element form) {
+    StringBuilder postData = new StringBuilder();
+    for (Element input : form.children()) {
+      if (postData.length() > 0) {
+        postData.append("&");
+      }
+      postData.append(input.attr("name")).append("=").append(input.attr("value"));
+    }
+    return postData.toString();
   }
 
   private static Optional<String> getIframeUrl(String text) {

@@ -1,12 +1,22 @@
 package io.ucandoit.nobot;
 
 import io.ucandoit.nobot.enums.WarStatus;
+import io.ucandoit.nobot.http.HttpClient;
+import io.ucandoit.nobot.model.Account;
+import io.ucandoit.nobot.repository.AccountRepository;
+import io.ucandoit.nobot.util.HttpUtils;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.annotation.Resource;
+import javax.transaction.Transactional;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -18,10 +28,30 @@ import java.util.GregorianCalendar;
 @SpringBootTest
 public class NobotApplicationTests {
 
+  @Resource private AccountRepository accountRepository;
+
+  @Resource private HttpClient httpClient;
+
   @Test
   public void contextLoads() {
     int delay = calculateInitialDelay(0);
     System.out.println(delay);
+  }
+
+  @Test
+  @Transactional
+  public void test() {
+    Account account = accountRepository.getOne("xzdykerik_4");
+    HttpUtils.requestToken(httpClient, account.getCookie())
+        .ifPresent(
+            token -> {
+              String url =
+                  "http://210.140.157.168/card/manage_card.htm?status=2&pages=1&mode=1&limit_rank=1";
+              ResponseEntity<String> response = httpClient.makePOSTRequest(url, "GET", null, token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc = Jsoup.parse(obj.getJSONObject(url).getString("body"));
+              System.out.println(doc.select(".card"));
+            });
   }
 
   @Test
