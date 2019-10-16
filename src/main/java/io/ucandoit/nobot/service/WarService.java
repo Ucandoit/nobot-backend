@@ -13,6 +13,7 @@ import io.ucandoit.nobot.task.WarTask;
 import io.ucandoit.nobot.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,9 @@ import java.util.concurrent.*;
 @Service
 @Slf4j
 public class WarService {
+
+  @Value("${scheduler.enable:true}")
+  private boolean enable;
 
   @Resource private AccountRepository accountRepository;
 
@@ -44,20 +48,32 @@ public class WarService {
 
   @Scheduled(cron = "0 59 5 * * *")
   public void dailyStop() {
-    log.info("Daily stop.");
-    stopAll();
+    if (enable) {
+      log.info("Daily stop.");
+      stopAll();
+    } else {
+      log.info("Scheduler for stop war disabled.");
+    }
   }
 
   @Scheduled(cron = "0 1 7 * * *")
   @Transactional
   public void dailyStart() {
-    log.info("Daily start.");
-    startAll();
+    if (enable) {
+      log.info("Daily start.");
+      startAll();
+    } else {
+      log.info("Scheduler for start war disabled.");
+    }
   }
 
   @Scheduled(cron = "0 1 17 * * *")
   public void dailyLogin() {
-    login();
+    if (enable) {
+      login();
+    } else {
+      log.info("Scheduler for login disabled.");
+    }
   }
 
   public void login() {

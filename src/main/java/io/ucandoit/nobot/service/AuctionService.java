@@ -7,6 +7,7 @@ import io.ucandoit.nobot.repository.TaskRepository;
 import io.ucandoit.nobot.task.SearchAHTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,9 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class AuctionService {
 
+  @Value("${scheduler.enable:true}")
+  private boolean enable;
+
   @Resource private AccountRepository accountRepository;
 
   @Resource private TaskRepository taskRepository;
@@ -33,15 +37,19 @@ public class AuctionService {
 
   @Scheduled(cron = "0 0 17 * * *")
   public void restart() {
-    log.info("Daily restart.");
-    if (executorService != null) {
-      executorService.shutdown();
-      executorService = Executors.newScheduledThreadPool(50);
-    }
-    taskMap = new HashMap<>();
-    taskRepository.deleteAll();
+    if (enable) {
+      log.info("Daily restart.");
+      if (executorService != null) {
+        executorService.shutdown();
+        executorService = Executors.newScheduledThreadPool(50);
+      }
+      taskMap = new HashMap<>();
+      taskRepository.deleteAll();
 
-    snipeAH();
+      snipeAH();
+    } else {
+      log.info("Scheduler for sniping disabled.");
+    }
   }
 
   public void snipeAH() {
