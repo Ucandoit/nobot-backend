@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.io.UnsupportedEncodingException;
 
 @RestController
 @RequestMapping(value = "/api/rest/wrestle")
@@ -21,9 +20,17 @@ public class WrestleResource {
       value = "/startWrestling",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
-  public ResponseEntity<Boolean> startWrestling(@RequestParam String login)
-      throws UnsupportedEncodingException {
+  public ResponseEntity<Boolean> startWrestling(@RequestParam String login) {
     wrestleService.startWrestling(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/stopWrestling",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> stopWrestling(@RequestParam String login) {
+    wrestleService.stopWrestling(login);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }

@@ -2,67 +2,81 @@ package io.ucandoit.nobot.task;
 
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.util.HttpUtils;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import javax.annotation.Resource;
+import java.util.Date;
 
-@Data
 @Slf4j
+@Component("wrestleTask")
+@Scope("prototype")
 public class WrestleTask implements Runnable {
 
-  private HttpClient httpClient;
-
-  private String searchUrl;
+  @Resource private HttpClient httpClient;
 
   private String token;
 
   private String cookie;
 
-  private boolean stop;
+  private String login;
 
-  public WrestleTask(HttpClient httpClient, String token, String cookie) {
-    this.httpClient = httpClient;
-    this.token = token;
-    this.cookie = cookie;
-    this.stop = false;
+  private Date tokenGenerateTime;
+
+  public WrestleTask() {
   }
 
   @Override
   public void run() {
-    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    executorService.scheduleAtFixedRate(
-        () -> {
-          boolean available = checkAvailability();
-          log.info(available ? "Start wrestling." : "Not available yet.");
-          if (available) {
-            try {
-              String wrestleUrl = "http://210.140.157.168/wrestle/wrestle_setup.htm";
-              ResponseEntity<String> response =
-                  httpClient.makePOSTRequest(wrestleUrl, "GET", "", token);
-              if (response.getStatusCode() == HttpStatus.OK) {
-                httpClient.makePOSTRequest(wrestleUrl, "POST", "action=btl", token);
-              }
-            } catch (Exception e) {
-              log.error("Error:", e);
-            }
+    try {
+      checkToken();
+      if (token != null) {
+        boolean available = checkAvailability();
+        log.info("Wrestle task: " + (available ? "Start wrestling." : "Not available yet."));
+        if (available) {
+          String wrestleUrl = "http://210.140.157.168/wrestle/wrestle_setup.htm";
+          ResponseEntity<String> response = httpClient.makePOSTRequest(wrestleUrl, "GET", "", token);
+          if (response.getStatusCode() == HttpStatus.OK) {
+            httpClient.makePOSTRequest(wrestleUrl, "POST", "action=btl", token);
           }
-        },
-        0,
-        5,
-        TimeUnit.SECONDS);
+        }
+      }
+    } catch (Exception e) {
+      log.error("Wrestle task: error for " + login + " : ", e);
+      if ("Stop".equals(e.getMessage())) {
+        throw e;
+      }
+    }
+  }
+
+  private void checkToken() {
+    boolean updateToken = false;
+    if (token == null || token.equals("")) {
+      updateToken = true;
+    } else {
+      if (tokenGenerateTime != null) {
+        long diff = new Date().getTime() - tokenGenerateTime.getTime();
+        if (diff > 30 * 60 * 1000) {
+          updateToken = true;
+        }
+      }
+    }
+    if (updateToken) {
+      log.info("Wrestle task: updating token for {}", login);
+      HttpUtils.requestToken(httpClient, cookie).ifPresent(s -> token = s);
+      tokenGenerateTime = new Date();
+    }
   }
 
   private boolean checkAvailability() throws RuntimeException {
-    log.info("Checking availability.");
+    log.info("Wrestle task: Checking availability.");
     String url = "http://210.140.157.168/village.htm";
     ResponseEntity<String> response = httpClient.makePOSTRequest(url, "GET", "", token);
     if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
@@ -82,5 +96,13 @@ public class WrestleTask implements Runnable {
     } else {
       return false;
     }
+  }
+
+  public void setCookie(String cookie) {
+    this.cookie = cookie;
+  }
+
+  public void setLogin(String login) {
+    this.login = login;
   }
 }
