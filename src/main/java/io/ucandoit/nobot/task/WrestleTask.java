@@ -39,7 +39,7 @@ public class WrestleTask implements Runnable {
       checkToken();
       if (token != null) {
         boolean available = checkAvailability();
-        log.info("Wrestle task: " + (available ? "Start wrestling." : "Not available yet."));
+        log.info("Wrestle task: " + (available ? "Start wrestling for {}" : "Not available yet for {}"), login);
         if (available) {
           String wrestleUrl = "http://210.140.157.168/wrestle/wrestle_setup.htm";
           ResponseEntity<String> response = httpClient.makePOSTRequest(wrestleUrl, "GET", "", token);
@@ -76,7 +76,7 @@ public class WrestleTask implements Runnable {
   }
 
   private boolean checkAvailability() throws RuntimeException {
-    log.info("Wrestle task: Checking availability.");
+    log.info("Wrestle task: Checking availability for {}", login);
     String url = "http://210.140.157.168/village.htm";
     ResponseEntity<String> response = httpClient.makePOSTRequest(url, "GET", "", token);
     if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
