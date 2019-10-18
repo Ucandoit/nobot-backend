@@ -2,14 +2,15 @@ package io.ucandoit.nobot.rest;
 
 import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.service.AccountService;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @RestController
@@ -22,8 +23,17 @@ public class AccountResource {
       value = "/info",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
-  public ResponseEntity<Page<AccountInfo>> generalInfo()
+  public ResponseEntity<List<AccountInfo>> generalInfo()
       throws ExecutionException, InterruptedException {
     return new ResponseEntity<>(accountService.getAccountsGeneralInfo(), HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/trade/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> trade(@PathVariable String login) {
+    accountService.trade(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }
