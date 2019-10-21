@@ -18,7 +18,7 @@ public class DataRestAdapter implements RepositoryRestConfigurer {
 
   private static final String BASE_PATH = "/api/rest";
 
-  @Value("io.ucandoit.nobot.domain")
+  @Value("io.ucandoit.nobot.model")
   private String entitiesBasePackage;
 
   @Override
