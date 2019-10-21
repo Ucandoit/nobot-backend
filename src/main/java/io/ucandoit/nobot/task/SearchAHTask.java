@@ -7,6 +7,7 @@ import io.ucandoit.nobot.model.Task;
 import io.ucandoit.nobot.repository.AccountRepository;
 import io.ucandoit.nobot.repository.AuctionHistoryRepository;
 import io.ucandoit.nobot.repository.TaskRepository;
+import io.ucandoit.nobot.service.CacheService;
 import io.ucandoit.nobot.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -23,8 +24,7 @@ import javax.transaction.Transactional;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ScheduledFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,7 +42,7 @@ public class SearchAHTask implements Runnable {
 
   @Resource private AccountRepository accountRepository;
 
-  private String cookie;
+  @Resource private CacheService cacheService;
 
   private Integer taskId;
 
@@ -71,8 +71,12 @@ public class SearchAHTask implements Runnable {
         return;
       }
       log.info("Searching {} for {}", count, login);
-      if (token == null || token.equals("")) {
-        HttpUtils.requestToken(httpClient, cookie).ifPresent(s -> token = s);
+      Optional<String> optionalToken = cacheService.getToken(login);
+      if (optionalToken.isPresent()) {
+        token = optionalToken.get();
+      } else {
+        cacheService.evictToken(login);
+        return;
       }
       if (searchUrl == null || searchUrl.equals("")) {
         searchUrl = requestAHPage(token);
@@ -82,10 +86,6 @@ public class SearchAHTask implements Runnable {
         Task task = taskRepository.getOne(taskId);
         task.setRepeat(count);
         taskRepository.save(task);
-      }
-      if (count % 500 == 0) {
-        log.info("Updating token for {}", login);
-        updateToken();
       }
       String response = requestAHSearch(searchUrl, token);
       if (response != null) {
@@ -111,10 +111,6 @@ public class SearchAHTask implements Runnable {
     } catch (Exception e) {
       log.error("error:", e);
     }
-  }
-
-  public void setCookie(String cookie) {
-    this.cookie = cookie;
   }
 
   public void setLogin(String login) {
@@ -186,23 +182,6 @@ public class SearchAHTask implements Runnable {
     if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
       log.error(
           "Error while requesting Token. Code: {}, Body: {}.",
-          response.getStatusCode(),
-          response.getBody());
-    }
-  }
-
-  private void updateToken() {
-    Map<String, Object> params = new HashMap<>();
-    params.put("st", token);
-    ResponseEntity<String> response =
-        httpClient.makePOSTRequest(
-            "http://yahoo-mbga.jp/game/12004455/update_token", params, cookie);
-    if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-      JSONObject obj = new JSONObject(response.getBody());
-      this.token = obj.getString("token");
-    } else {
-      log.error(
-          "Error while updating token. Code: {}, Body: {}.",
           response.getStatusCode(),
           response.getBody());
     }

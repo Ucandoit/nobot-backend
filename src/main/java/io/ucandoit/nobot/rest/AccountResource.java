@@ -36,4 +36,13 @@ public class AccountResource {
     accountService.trade(login);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
+
+  @RequestMapping(
+      value = "/login",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> login() {
+    accountService.dailyLogin();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 }

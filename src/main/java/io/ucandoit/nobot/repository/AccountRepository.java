@@ -9,6 +9,5 @@ import java.util.List;
 @RepositoryRestResource
 public interface AccountRepository extends JpaRepository<Account, String> {
 
-    List<Account> findByLoginIn(List<String> loginList);
-
+  List<Account> findByLoginIn(List<String> loginList);
 }

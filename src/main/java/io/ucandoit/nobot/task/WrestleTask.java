@@ -1,6 +1,7 @@
 package io.ucandoit.nobot.task;
 
 import io.ucandoit.nobot.http.HttpClient;
+import io.ucandoit.nobot.service.CacheService;
 import io.ucandoit.nobot.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -13,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Date;
 
 @Slf4j
 @Component("wrestleTask")
@@ -22,27 +22,27 @@ public class WrestleTask implements Runnable {
 
   @Resource private HttpClient httpClient;
 
-  private String token;
+  @Resource private CacheService cacheService;
 
-  private String cookie;
+  private String token;
 
   private String login;
 
-  private Date tokenGenerateTime;
-
-  public WrestleTask() {
-  }
+  public WrestleTask() {}
 
   @Override
   public void run() {
     try {
-      checkToken();
+      cacheService.getToken(login).ifPresent(s -> token = s);
       if (token != null) {
         boolean available = checkAvailability();
-        log.info("Wrestle task: " + (available ? "Start wrestling for {}" : "Not available yet for {}"), login);
+        log.info(
+            "Wrestle task: " + (available ? "Start wrestling for {}" : "Not available yet for {}"),
+            login);
         if (available) {
           String wrestleUrl = "http://210.140.157.168/wrestle/wrestle_setup.htm";
-          ResponseEntity<String> response = httpClient.makePOSTRequest(wrestleUrl, "GET", "", token);
+          ResponseEntity<String> response =
+              httpClient.makePOSTRequest(wrestleUrl, "GET", "", token);
           if (response.getStatusCode() == HttpStatus.OK) {
             httpClient.makePOSTRequest(wrestleUrl, "POST", "action=btl", token);
           }
@@ -53,25 +53,6 @@ public class WrestleTask implements Runnable {
       if ("Stop".equals(e.getMessage())) {
         throw e;
       }
-    }
-  }
-
-  private void checkToken() {
-    boolean updateToken = false;
-    if (token == null || token.equals("")) {
-      updateToken = true;
-    } else {
-      if (tokenGenerateTime != null) {
-        long diff = new Date().getTime() - tokenGenerateTime.getTime();
-        if (diff > 30 * 60 * 1000) {
-          updateToken = true;
-        }
-      }
-    }
-    if (updateToken) {
-      log.info("Wrestle task: updating token for {}", login);
-      HttpUtils.requestToken(httpClient, cookie).ifPresent(s -> token = s);
-      tokenGenerateTime = new Date();
     }
   }
 
@@ -96,10 +77,6 @@ public class WrestleTask implements Runnable {
     } else {
       return false;
     }
-  }
-
-  public void setCookie(String cookie) {
-    this.cookie = cookie;
   }
 
   public void setLogin(String login) {

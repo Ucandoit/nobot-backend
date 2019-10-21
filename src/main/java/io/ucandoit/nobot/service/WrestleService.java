@@ -39,7 +39,6 @@ public class WrestleService {
         }
         WrestleTask wrestleTask = (WrestleTask) beanFactory.getBean("wrestleTask");
         wrestleTask.setLogin(account.getLogin());
-        wrestleTask.setCookie(account.getCookie());
         future = executorService.scheduleAtFixedRate(wrestleTask, 0, 5, TimeUnit.SECONDS);
         futureMap.put(login, future);
       } else {

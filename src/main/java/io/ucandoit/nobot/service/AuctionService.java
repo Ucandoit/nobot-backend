@@ -110,7 +110,6 @@ public class AuctionService {
         task = taskRepository.save(task);
 
         SearchAHTask searchAHTask = (SearchAHTask) beanFactory.getBean("searchAHTask");
-        searchAHTask.setCookie(account.getCookie());
         searchAHTask.setTaskId(task.getId());
         searchAHTask.setLogin(account.getLogin());
         searchAHTask.setCount(startCount);

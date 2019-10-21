@@ -1,6 +1,7 @@
 package io.ucandoit.nobot.task;
 
 import io.ucandoit.nobot.http.HttpClient;
+import io.ucandoit.nobot.service.CacheService;
 import io.ucandoit.nobot.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -12,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Date;
 
 @Slf4j
 @Component("storyTask")
@@ -25,18 +25,16 @@ public class StoryTask implements Runnable {
 
   @Resource private HttpClient httpClient;
 
+  @Resource private CacheService cacheService;
+
   private String login;
 
-  private String cookie;
-
   private String token;
-
-  private Date tokenGenerateTime;
 
   @Override
   public void run() {
     try {
-      checkToken();
+      cacheService.getToken(login).ifPresent(s -> token = s);
       if (token != null) {
         httpClient.makePOSTRequest(MAP_URL, "GET", null, token);
         notifyUpdate();
@@ -81,25 +79,6 @@ public class StoryTask implements Runnable {
     }
   }
 
-  private void checkToken() {
-    boolean updateToken = false;
-    if (token == null || token.equals("")) {
-      updateToken = true;
-    } else {
-      if (tokenGenerateTime != null) {
-        long diff = new Date().getTime() - tokenGenerateTime.getTime();
-        if (diff > 30 * 60 * 1000) {
-          updateToken = true;
-        }
-      }
-    }
-    if (updateToken) {
-      log.info("Story task: updating token for {}", login);
-      HttpUtils.requestToken(httpClient, cookie).ifPresent(s -> token = s);
-      tokenGenerateTime = new Date();
-    }
-  }
-
   private void notifyUpdate() {
     httpClient.makePOSTRequest(
         "http://210.140.157.168/notify_update.htm",
@@ -110,9 +89,5 @@ public class StoryTask implements Runnable {
 
   public void setLogin(String login) {
     this.login = login;
-  }
-
-  public void setCookie(String cookie) {
-    this.cookie = cookie;
   }
 }

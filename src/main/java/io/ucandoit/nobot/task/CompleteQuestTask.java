@@ -1,7 +1,7 @@
 package io.ucandoit.nobot.task;
 
 import io.ucandoit.nobot.http.HttpClient;
-import io.ucandoit.nobot.util.HttpUtils;
+import io.ucandoit.nobot.service.CacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -16,14 +16,15 @@ public class CompleteQuestTask implements Runnable {
 
   private static final String MISSION_URL = "http://210.140.157.168/tutorial/mission.htm";
   @Resource private HttpClient httpClient;
+  @Resource private CacheService cacheService;
   private String login;
-  private String cookie;
   private List<Integer> questIds;
 
   @Override
   public void run() {
     log.info("Complete war quests for {}", login);
-    HttpUtils.requestToken(httpClient, cookie)
+    cacheService
+        .getToken(login)
         .ifPresent(
             token -> {
               for (Integer questId : questIds) {
@@ -37,10 +38,6 @@ public class CompleteQuestTask implements Runnable {
 
   public void setLogin(String login) {
     this.login = login;
-  }
-
-  public void setCookie(String cookie) {
-    this.cookie = cookie;
   }
 
   public void setQuestIds(List<Integer> questIds) {

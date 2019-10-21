@@ -99,15 +99,6 @@ public class WarResource {
   }
 
   @RequestMapping(
-      value = "/login",
-      method = RequestMethod.GET,
-      produces = "application/json; charset=UTF-8")
-  public ResponseEntity<Boolean> login() {
-    warService.login();
-    return new ResponseEntity<>(true, HttpStatus.OK);
-  }
-
-  @RequestMapping(
       value = "/completeQuest/{login}",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")

@@ -10,10 +10,13 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.transaction.Transactional;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -26,24 +29,39 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AccountService {
 
+  @Value("${scheduler.enable:true}")
+  private boolean enable;
+
   @Resource private AccountRepository accountRepository;
 
   @Resource private HttpClient httpClient;
 
+  @Resource private CacheService cacheService;
+
   public List<AccountInfo> getAccountsGeneralInfo()
       throws ExecutionException, InterruptedException {
-//    Pageable pageable = PageRequest.of(0, 5);
-//    long total = accountRepository.count();
-//    Page<Account> accounts = accountRepository.findAll(pageable);
-    List<Account> accounts = accountRepository.findByLoginIn(Arrays.asList("ucandoit", "xzdykerik_2", "xzdykerik_3", "xzdykerik_6", "xzdykerik_7", "xzdykerik_8", "xzdykerik_9", "xzdykerik_10", "xzdykerik_51"));
+    //    Pageable pageable = PageRequest.of(0, 5);
+    //    long total = accountRepository.count();
+    //    Page<Account> accounts = accountRepository.findAll(pageable);
+    List<Account> accounts =
+        accountRepository.findByLoginIn(
+            Arrays.asList(
+                "ucandoit",
+                "xzdykerik_2",
+                "xzdykerik_3",
+                "xzdykerik_6",
+                "xzdykerik_7",
+                "xzdykerik_8",
+                "xzdykerik_9",
+                "xzdykerik_10",
+                "xzdykerik_51"));
     List<CompletableFuture<AccountInfo>> futures =
         accounts.stream()
             .map(
                 account ->
                     CompletableFuture.supplyAsync(
                         () -> {
-                          Optional<String> token =
-                              HttpUtils.requestToken(httpClient, account.getCookie());
+                          Optional<String> token = cacheService.getToken(account.getLogin());
                           if (token.isPresent()) {
                             String homeUrl = "http://210.140.157.168/village.htm";
                             ResponseEntity<String> response =
@@ -85,22 +103,65 @@ public class AccountService {
 
   public void trade(String login) {
     Account account = accountRepository.getOne(login);
-    HttpUtils.requestToken(httpClient, account.getCookie()).ifPresent(token -> {
-      String villageUrl = "http://210.140.157.168/village.htm";
-      ResponseEntity<String> response = httpClient.makePOSTRequest(villageUrl, "GET", null, token);
-      JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
-      Document doc = Jsoup.parse(obj.getJSONObject(villageUrl).getString("body"));
-      Element form = doc.selectFirst("#trade-all-form");
-      String actionUrl = form.attr("action");
-      StringBuilder postData = new StringBuilder();
-      for (Element input : form.children()) {
-        if (postData.length() > 0) {
-          postData.append("&");
-        }
-        postData.append(input.attr("name")).append("=").append(input.attr("value"));
-      }
-      httpClient.makePOSTRequest(actionUrl, "POST", postData.toString(), token);
-    });
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              String villageUrl = "http://210.140.157.168/village.htm";
+              ResponseEntity<String> response =
+                  httpClient.makePOSTRequest(villageUrl, "GET", null, token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc = Jsoup.parse(obj.getJSONObject(villageUrl).getString("body"));
+              Element form = doc.selectFirst("#trade-all-form");
+              String actionUrl = form.attr("action");
+              StringBuilder postData = new StringBuilder();
+              for (Element input : form.children()) {
+                if (postData.length() > 0) {
+                  postData.append("&");
+                }
+                postData.append(input.attr("name")).append("=").append(input.attr("value"));
+              }
+              httpClient.makePOSTRequest(actionUrl, "POST", postData.toString(), token);
+            });
+  }
+
+  @Scheduled(cron = "0 */30 * * * *")
+  @Transactional
+  public void updateTokens() {
+    CompletableFuture.allOf(
+            accountRepository.findAll().stream()
+                .map(
+                    account ->
+                        CompletableFuture.runAsync(
+                            () -> cacheService.updateToken(account.getLogin())))
+                .toArray(CompletableFuture[]::new))
+        .join();
+  }
+
+  @Scheduled(cron = "0 1 17 * * *")
+  @Transactional
+  public void dailyLogin() {
+    if (enable) {
+      CompletableFuture.allOf(
+              accountRepository.findAll().stream()
+                  .map(
+                      account ->
+                          CompletableFuture.runAsync(
+                              () ->
+                                  cacheService
+                                      .getToken(account.getLogin())
+                                      .ifPresent(
+                                          token ->
+                                              httpClient.makePOSTRequest(
+                                                  "http://210.140.157.168/world_list.htm",
+                                                  "GET",
+                                                  null,
+                                                  token))))
+                  .toArray(CompletableFuture[]::new))
+          .join();
+    } else {
+      log.info("Scheduler for login disabled.");
+    }
   }
 
   /**

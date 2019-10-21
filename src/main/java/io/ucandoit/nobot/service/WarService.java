@@ -1,7 +1,6 @@
 package io.ucandoit.nobot.service;
 
 import io.ucandoit.nobot.enums.WarStatus;
-import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
 import io.ucandoit.nobot.model.Parameter;
 import io.ucandoit.nobot.model.WarConfig;
@@ -10,7 +9,6 @@ import io.ucandoit.nobot.repository.ParameterRepository;
 import io.ucandoit.nobot.repository.WarConfigRepository;
 import io.ucandoit.nobot.task.CompleteQuestTask;
 import io.ucandoit.nobot.task.WarTask;
-import io.ucandoit.nobot.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +18,10 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 @Service
@@ -31,8 +32,6 @@ public class WarService {
   private boolean enable;
 
   @Resource private AccountRepository accountRepository;
-
-  @Resource private HttpClient httpClient;
 
   @Resource private WarConfigRepository warConfigRepository;
 
@@ -67,24 +66,6 @@ public class WarService {
     }
   }
 
-  @Scheduled(cron = "0 1 17 * * *")
-  public void dailyLogin() {
-    if (enable) {
-      login();
-    } else {
-      log.info("Scheduler for login disabled.");
-    }
-  }
-
-  public void login() {
-    List<Account> accounts = accountRepository.findAll();
-    for (Account account : accounts) {
-      Optional<String> token = HttpUtils.requestToken(httpClient, account.getCookie());
-      token.ifPresent(
-          s -> httpClient.makePOSTRequest("http://210.140.157.168/world_list.htm", "GET", null, s));
-    }
-  }
-
   public void stopAll() {
     if (executorService != null) {
       executorService.shutdown();
@@ -107,7 +88,6 @@ public class WarService {
         if (account != null) {
           if (account.getExpirationDate().after(new Date())) {
             WarTask warTask = (WarTask) beanFactory.getBean("warTask");
-            warTask.setCookie(account.getCookie());
             warTask.setLogin(account.getLogin());
             warTask.setLine(warConfig.getLine());
             warTask.setFp(warConfig.isFp());
@@ -140,7 +120,6 @@ public class WarService {
           future.cancel(true);
         }
         WarTask warTask = (WarTask) beanFactory.getBean("warTask");
-        warTask.setCookie(account.getCookie());
         warTask.setLogin(account.getLogin());
         warTask.setLine(Integer.parseInt(line));
         warTask.setFp(fp != null && fp);
@@ -214,11 +193,9 @@ public class WarService {
   }
 
   public void completeQuest(String login, List<Integer> questIds) {
-    Account account = accountRepository.getOne(login);
     CompleteQuestTask completeQuestTask =
         (CompleteQuestTask) beanFactory.getBean("completeQuestTask");
     completeQuestTask.setLogin(login);
-    completeQuestTask.setCookie(account.getCookie());
     completeQuestTask.setQuestIds(questIds);
     questExecutorService.submit(completeQuestTask);
   }

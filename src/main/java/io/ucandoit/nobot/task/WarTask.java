@@ -1,6 +1,7 @@
 package io.ucandoit.nobot.task;
 
 import io.ucandoit.nobot.http.HttpClient;
+import io.ucandoit.nobot.service.CacheService;
 import io.ucandoit.nobot.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -25,13 +26,11 @@ public class WarTask implements Runnable {
 
   @Resource private HttpClient httpClient;
 
-  private String cookie;
+  @Resource private CacheService cacheService;
 
   private String login;
 
   private String token;
-
-  private Date tokenGenerateTime;
 
   private boolean fp;
 
@@ -46,7 +45,7 @@ public class WarTask implements Runnable {
   @Override
   public void run() {
     try {
-      checkToken();
+      cacheService.getToken(login).ifPresent(s -> token = s);
       if (token != null) {
         boolean availability = checkAvailability();
         if (availability) {
@@ -70,25 +69,6 @@ public class WarTask implements Runnable {
       }
     } catch (Exception e) {
       log.error("War task error:", e);
-    }
-  }
-
-  private void checkToken() {
-    boolean updateToken = false;
-    if (token == null || token.equals("")) {
-      updateToken = true;
-    } else {
-      if (tokenGenerateTime != null) {
-        long diff = new Date().getTime() - tokenGenerateTime.getTime();
-        if (diff > 30 * 60 * 1000) {
-          updateToken = true;
-        }
-      }
-    }
-    if (updateToken) {
-      log.info("Updating token for {}", login);
-      HttpUtils.requestToken(httpClient, cookie).ifPresent(s -> token = s);
-      tokenGenerateTime = new Date();
     }
   }
 
@@ -235,10 +215,6 @@ public class WarTask implements Runnable {
       }
     }
     return food / count;
-  }
-
-  public void setCookie(String cookie) {
-    this.cookie = cookie;
   }
 
   public void setLogin(String login) {

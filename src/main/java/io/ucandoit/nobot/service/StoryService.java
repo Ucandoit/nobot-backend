@@ -65,7 +65,6 @@ public class StoryService {
         }
         StoryTask storyTask = (StoryTask) beanFactory.getBean("storyTask");
         storyTask.setLogin(account.getLogin());
-        storyTask.setCookie(account.getCookie());
         future = executorService.scheduleAtFixedRate(storyTask, 0, 60, TimeUnit.SECONDS);
         futureMap.put(account.getLogin(), future);
       } else {
