@@ -3,10 +3,7 @@ package io.ucandoit.nobot.rest;
 import io.ucandoit.nobot.service.WarService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
@@ -107,6 +104,16 @@ public class WarResource {
       questIds = new Integer[] {139, 158, 218, 219, 181, 182};
     }
     warService.completeQuest(login, Arrays.asList(questIds));
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/field",
+      method = RequestMethod.POST,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> goToWarField(
+      @RequestParam String login, @RequestParam String warField) {
+    warService.goToWarField(login, warField);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }

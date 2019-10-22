@@ -1,6 +1,7 @@
 package io.ucandoit.nobot.service;
 
 import io.ucandoit.nobot.enums.WarStatus;
+import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
 import io.ucandoit.nobot.model.Parameter;
 import io.ucandoit.nobot.model.WarConfig;
@@ -9,9 +10,16 @@ import io.ucandoit.nobot.repository.ParameterRepository;
 import io.ucandoit.nobot.repository.WarConfigRepository;
 import io.ucandoit.nobot.task.CompleteQuestTask;
 import io.ucandoit.nobot.task.WarTask;
+import io.ucandoit.nobot.util.HttpUtils;
+import io.ucandoit.nobot.util.NobotUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +46,10 @@ public class WarService {
   @Resource private BeanFactory beanFactory;
 
   @Resource private ParameterRepository parameterRepository;
+
+  @Resource private HttpClient httpClient;
+
+  @Resource private CacheService cacheService;
 
   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(50);
 
@@ -198,6 +210,25 @@ public class WarService {
     completeQuestTask.setLogin(login);
     completeQuestTask.setQuestIds(questIds);
     questExecutorService.submit(completeQuestTask);
+  }
+
+  public void goToWarField(String login, String warField) {
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              ResponseEntity<String> response =
+                  httpClient.makePOSTRequest(NobotUtils.MAP_URL, "GET", null, token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc = Jsoup.parse(obj.getJSONObject(NobotUtils.MAP_URL).getString("body"));
+              Element form =
+                  doc.selectFirst("img[alt=" + warField + "]")
+                      .parent()
+                      .nextElementSibling()
+                      .selectFirst("form");
+              httpClient.makePOSTRequest(
+                  NobotUtils.MAP_URL, "POST", HttpUtils.buildPostData(form), token);
+            });
   }
 
   private WarStatus checkWarStatus(Date date) {
