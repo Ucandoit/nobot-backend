@@ -5,6 +5,7 @@ import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
 import io.ucandoit.nobot.repository.AccountRepository;
 import io.ucandoit.nobot.util.HttpUtils;
+import io.ucandoit.nobot.util.NobotUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Service
@@ -162,6 +164,21 @@ public class AccountService {
     } else {
       log.info("Scheduler for login disabled.");
     }
+  }
+
+  public String getLocation(String login) {
+    AtomicReference<String> location = new AtomicReference<>("");
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              ResponseEntity<String> response =
+                  httpClient.makePOSTRequest(NobotUtils.MAP_URL, "GET", null, token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc = Jsoup.parse(obj.getJSONObject(NobotUtils.MAP_URL).getString("body"));
+              location.set(doc.selectFirst("#notify_count_title span").text());
+            });
+    return location.get();
   }
 
   /**

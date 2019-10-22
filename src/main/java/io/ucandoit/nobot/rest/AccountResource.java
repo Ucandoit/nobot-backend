@@ -2,6 +2,7 @@ package io.ucandoit.nobot.rest;
 
 import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.service.AccountService;
+import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,5 +45,16 @@ public class AccountResource {
   public ResponseEntity<Boolean> login() {
     accountService.dailyLogin();
     return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/location/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<String> getLocation(@PathVariable String login) {
+    String location = accountService.getLocation(login);
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("location", location);
+    return new ResponseEntity<>(jsonObject.toString(), HttpStatus.OK);
   }
 }
