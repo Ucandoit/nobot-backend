@@ -17,8 +17,10 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -26,10 +28,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 @Service
@@ -182,26 +181,24 @@ public class WarService {
     warConfigRepository.save(warConfig);
   }
 
-  public String getWarConfigList() {
-    List<WarConfig> warConfigList = warConfigRepository.findAll();
-    StringBuilder sb = new StringBuilder();
-    for (WarConfig warConfig : warConfigList) {
-      sb.append("ID : ")
-          .append(warConfig.getLogin())
-          .append("; Line : ")
-          .append(warConfig.getLine())
-          .append("; FP: ")
-          .append(warConfig.isFp());
-      ScheduledFuture<?> future = futureMap.get(warConfig.getLogin());
-      sb.append(" ; Status: ");
-      if (future != null && !future.isDone()) {
-        sb.append("Started");
-      } else {
-        sb.append("Stopped");
-      }
-      sb.append(System.lineSeparator());
-    }
-    return sb.toString();
+  public void setNPC(String login, boolean npc) {
+    WarConfig warConfig = warConfigRepository.getOne(login);
+    warConfig.setNpc(npc);
+    warConfigRepository.save(warConfig);
+  }
+
+  public List<WarConfig> getWarConfigList() {
+    List<WarConfig> warConfigList = warConfigRepository.findAll(Sort.by("login").ascending());
+    warConfigList.forEach(
+        warConfig -> {
+          ScheduledFuture<?> future = futureMap.get(warConfig.getLogin());
+          if (future != null && !future.isDone()) {
+            warConfig.setAuto(true);
+          } else {
+            warConfig.setAuto(false);
+          }
+        });
+    return warConfigList;
   }
 
   public void completeQuest(String login, List<Integer> questIds) {
@@ -210,6 +207,81 @@ public class WarService {
     completeQuestTask.setLogin(login);
     completeQuestTask.setQuestIds(questIds);
     questExecutorService.submit(completeQuestTask);
+  }
+
+  public void checkWar() {
+    CompletableFuture.allOf(
+            warConfigRepository.findAll().stream()
+                .map(
+                    warConfig ->
+                        CompletableFuture.runAsync(
+                            () ->
+                                cacheService
+                                    .getToken(warConfig.getLogin())
+                                    .ifPresent(
+                                        token -> {
+                                          ResponseEntity<String> response =
+                                              httpClient.makePOSTRequest(
+                                                  NobotUtils.MAP_URL, "GET", null, token);
+                                          JSONObject obj =
+                                              HttpUtils.responseToJsonObject(response.getBody());
+                                          Document doc =
+                                              Jsoup.parse(
+                                                  obj.getJSONObject(NobotUtils.MAP_URL)
+                                                      .getString("body"));
+                                          Elements elements = doc.select(".map_point_w");
+                                          String warField = "";
+                                          String warHost = "";
+                                          List<String> warFields = new ArrayList<>();
+                                          List<String> warHosts = new ArrayList<>();
+                                          boolean pc = false;
+                                          for (Element element : elements) {
+                                            if (element.parent().tagName().equals("a")) {
+                                              warField = element.attr("alt");
+                                              response =
+                                                  httpClient.makePOSTRequest(
+                                                      NobotUtils.WAR_SETUP_URL, "GET", null, token);
+                                              obj =
+                                                  HttpUtils.responseToJsonObject(
+                                                      response.getBody());
+                                              doc =
+                                                  Jsoup.parse(
+                                                      obj.getJSONObject(NobotUtils.WAR_SETUP_URL)
+                                                          .getString("body"));
+                                              Element checkboxPcBattle =
+                                                  doc.selectFirst("#chstat_pcb");
+                                              if (checkboxPcBattle != null) {
+                                                pc =
+                                                    checkboxPcBattle
+                                                        .attr("checked")
+                                                        .equals("checked");
+                                              }
+                                              Elements entries = doc.select(".warinfo_daimyo");
+                                              for (Element entry : entries) {
+                                                if (entry.selectFirst(".war_entry") != null) {
+                                                  if (warHost.equals("")) {
+                                                    warHost = entry.selectFirst("img").attr("alt");
+                                                  } else {
+                                                    warHost = "";
+                                                  }
+                                                }
+                                                warHosts.add(entry.selectFirst("img").attr("alt"));
+                                              }
+                                            }
+                                            warFields.add(element.attr("alt"));
+                                          }
+
+                                          warConfig.setPc(pc);
+                                          JSONObject jsonObject = new JSONObject();
+                                          jsonObject.put("warField", warField);
+                                          jsonObject.put("warHost", warHost);
+                                          jsonObject.put("warFields", warFields);
+                                          jsonObject.put("warHosts", warHosts);
+                                          warConfig.setStatus(jsonObject.toString());
+                                          warConfigRepository.save(warConfig);
+                                        })))
+                .toArray(CompletableFuture[]::new))
+        .join();
   }
 
   public void goToWarField(String login, String warField) {

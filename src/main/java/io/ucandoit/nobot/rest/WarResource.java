@@ -1,5 +1,6 @@
 package io.ucandoit.nobot.rest;
 
+import io.ucandoit.nobot.model.WarConfig;
 import io.ucandoit.nobot.service.WarService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/rest/war")
@@ -55,7 +57,7 @@ public class WarResource {
       value = "/warConfigList",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
-  public ResponseEntity<String> getWarConfigList() {
+  public ResponseEntity<List<WarConfig>> getWarConfigList() {
     return new ResponseEntity<>(warService.getWarConfigList(), HttpStatus.OK);
   }
 
@@ -96,6 +98,15 @@ public class WarResource {
   }
 
   @RequestMapping(
+      value = "/npc/{login}/{npc}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> setNPC(@PathVariable String login, @PathVariable boolean npc) {
+    warService.setNPC(login, npc);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
       value = "/completeQuest/{login}",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
@@ -104,6 +115,15 @@ public class WarResource {
       questIds = new Integer[] {139, 158, 218, 219, 181, 182};
     }
     warService.completeQuest(login, Arrays.asList(questIds));
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/checkWar",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> checkWar() {
+    warService.checkWar();
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 
