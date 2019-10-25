@@ -56,14 +56,13 @@ public class HttpClient {
   }
 
   public ResponseEntity<String> makePOSTRequest(
-      String url, Map<String, Object> params, String cookie) {
+      String url, Map<String, Object> params) {
     MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
     for (Map.Entry<String, Object> entry : params.entrySet()) {
       map.add(entry.getKey(), entry.getValue());
     }
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-    headers.add("Cookie", cookie);
     HttpEntity entity = new HttpEntity<>(map, headers);
 
     return restTemplate.exchange(url, HttpMethod.POST, entity, String.class);

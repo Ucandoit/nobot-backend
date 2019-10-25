@@ -3,7 +3,9 @@ package io.ucandoit.nobot.service;
 import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
+import io.ucandoit.nobot.model.Parameter;
 import io.ucandoit.nobot.repository.AccountRepository;
+import io.ucandoit.nobot.repository.ParameterRepository;
 import io.ucandoit.nobot.util.HttpUtils;
 import io.ucandoit.nobot.util.NobotUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +20,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -39,6 +38,8 @@ public class AccountService {
   @Resource private HttpClient httpClient;
 
   @Resource private CacheService cacheService;
+
+  @Resource private ParameterRepository parameterRepository;
 
   public List<AccountInfo> getAccountsGeneralInfo()
       throws ExecutionException, InterruptedException {
@@ -179,6 +180,39 @@ public class AccountService {
               location.set(doc.selectFirst("#notify_count_title span").text());
             });
     return location.get();
+  }
+
+  @Scheduled(cron = "0 5 18 * * *")
+  @Transactional
+  public void linkGame100SanGuo() {
+    Parameter parameter = parameterRepository.getOne("100sanguo.login");
+    if (enable && parameter.getValue() == "1") {
+      CompletableFuture.allOf(
+              accountRepository.findAll().stream()
+                  .map(
+                      account ->
+                          CompletableFuture.runAsync(
+                              () ->
+                                  cacheService
+                                      .getToken(account.getLogin())
+                                      .ifPresent(
+                                          token -> {
+                                            String url =
+                                                "http://40e7b82553f00715f4a4027b8c4798c4b1b8c789.app.mbga-platform.jp/gadgets/makeRequest";
+                                            Map<String, Object> params = new HashMap<>();
+                                            params.put(
+                                                "url",
+                                                "http://103spym.gamecity.ne.jp/100RTKSpecial/browser/tutorial_v2/tut01.php?guid=ON&isFlash=1&date="
+                                                    + new Date().getTime());
+                                            params.put("st", token);
+                                            params.put("authz", "signed");
+                                            httpClient.makePOSTRequest(url, params);
+                                          })))
+                  .toArray(CompletableFuture[]::new))
+          .join();
+    } else {
+      log.info("Scheduler for 100sanguo disabled.");
+    }
   }
 
   /**

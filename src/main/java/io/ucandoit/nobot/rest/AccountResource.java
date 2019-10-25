@@ -57,4 +57,13 @@ public class AccountResource {
     jsonObject.put("location", location);
     return new ResponseEntity<>(jsonObject.toString(), HttpStatus.OK);
   }
+
+  @RequestMapping(
+          value = "/sanguo",
+          method = RequestMethod.GET,
+          produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> linkGame100SanGuo() {
+    accountService.linkGame100SanGuo();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 }
