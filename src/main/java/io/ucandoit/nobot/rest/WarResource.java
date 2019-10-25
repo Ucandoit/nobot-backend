@@ -136,4 +136,23 @@ public class WarResource {
     warService.goToWarField(login, warField);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
+
+  @RequestMapping(
+      value = "/host",
+      method = RequestMethod.POST,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> chooseWarHost(
+      @RequestParam String login, @RequestParam int warHost) {
+    warService.chooseWarHost(login, warHost);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/pc/{login}/{pc}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> setPc(@PathVariable String login, @PathVariable boolean pc) {
+    warService.setPc(login, pc);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 }

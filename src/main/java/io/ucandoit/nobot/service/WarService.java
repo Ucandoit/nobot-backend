@@ -303,6 +303,38 @@ public class WarService {
             });
   }
 
+  public void chooseWarHost(String login, int warHost) {
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              httpClient.makePOSTRequest(
+                  NobotUtils.WAR_SETUP_URL, "POST", "action=entry_war&target=" + warHost, token);
+            });
+  }
+
+  public void setPc(String login, boolean pc) {
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              ResponseEntity<String> response =
+                  httpClient.makePOSTRequest(
+                      NobotUtils.WAR_SETUP_URL,
+                      "POST",
+                      "action=chstat_pcbattle&pcbattle_stat=" + pc,
+                      token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc =
+                  Jsoup.parse(obj.getJSONObject(NobotUtils.WAR_SETUP_URL).getString("body"));
+              Element checkboxPcBattle = doc.selectFirst("#chstat_pcb");
+              boolean pcb = checkboxPcBattle.attr("checked").equals("checked");
+              WarConfig warConfig = warConfigRepository.getOne(login);
+              warConfig.setPc(pcb);
+              warConfigRepository.save(warConfig);
+            });
+  }
+
   private WarStatus checkWarStatus(Date date) {
     try {
       Parameter parameter = parameterRepository.getOne("war.lastDay");
