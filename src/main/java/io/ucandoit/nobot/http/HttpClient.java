@@ -55,8 +55,7 @@ public class HttpClient {
         String.class);
   }
 
-  public ResponseEntity<String> makePOSTRequest(
-      String url, Map<String, Object> params) {
+  public ResponseEntity<String> makePOSTRequest(String url, Map<String, Object> params) {
     MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
     for (Map.Entry<String, Object> entry : params.entrySet()) {
       map.add(entry.getKey(), entry.getValue());
