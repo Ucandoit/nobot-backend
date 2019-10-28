@@ -141,7 +141,7 @@ public class AccountService {
         .join();
   }
 
-  @Scheduled(cron = "0 1 17 * * *")
+  @Scheduled(cron = "0 1 16 * * *")
   @Transactional
   public void dailyLogin() {
     if (enable) {
@@ -182,7 +182,7 @@ public class AccountService {
     return location.get();
   }
 
-  @Scheduled(cron = "0 5 18 * * *")
+  @Scheduled(cron = "0 10 16 * * *")
   @Transactional
   public void linkGame100SanGuo() {
     Parameter parameter = parameterRepository.getOne("100sanguo.login");

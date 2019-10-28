@@ -56,7 +56,7 @@ public class WarService {
 
   private Map<String, ScheduledFuture<?>> futureMap = new HashMap<>();
 
-  @Scheduled(cron = "0 59 5 * * *")
+  @Scheduled(cron = "0 59 4 * * *")
   public void dailyStop() {
     if (enable) {
       log.info("Daily stop.");
@@ -66,7 +66,7 @@ public class WarService {
     }
   }
 
-  @Scheduled(cron = "0 1 7 * * *")
+  @Scheduled(cron = "0 1 6 * * *")
   @Transactional
   public void dailyStart() {
     if (enable) {

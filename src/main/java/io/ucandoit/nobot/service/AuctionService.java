@@ -35,7 +35,7 @@ public class AuctionService {
 
   private Map<String, SearchAHTask> taskMap = new HashMap<>();
 
-  @Scheduled(cron = "0 0 17 * * *")
+  @Scheduled(cron = "0 0 16 * * *")
   public void restart() {
     if (enable) {
       log.info("Daily restart.");
