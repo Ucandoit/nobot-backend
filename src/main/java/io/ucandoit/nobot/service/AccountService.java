@@ -186,33 +186,38 @@ public class AccountService {
   @Transactional
   public void linkGame100SanGuo() {
     Parameter parameter = parameterRepository.getOne("100sanguo.login");
-    if (enable && parameter.getValue() == "1") {
-      CompletableFuture.allOf(
-              accountRepository.findAll().stream()
-                  .map(
-                      account ->
-                          CompletableFuture.runAsync(
-                              () ->
-                                  cacheService
-                                      .getToken(account.getLogin())
-                                      .ifPresent(
-                                          token -> {
-                                            String url =
-                                                "http://40e7b82553f00715f4a4027b8c4798c4b1b8c789.app.mbga-platform.jp/gadgets/makeRequest";
-                                            Map<String, Object> params = new HashMap<>();
-                                            params.put(
-                                                "url",
-                                                "http://103spym.gamecity.ne.jp/100RTKSpecial/browser/tutorial_v2/tut01.php?guid=ON&isFlash=1&date="
-                                                    + new Date().getTime());
-                                            params.put("st", token);
-                                            params.put("authz", "signed");
-                                            httpClient.makePOSTRequest(url, params);
-                                          })))
-                  .toArray(CompletableFuture[]::new))
-          .join();
+    if (enable && parameter.getValue().equals("1")) {
+        linkSanGuo();
+        linkSanGuo();
     } else {
       log.info("Scheduler for 100sanguo disabled.");
     }
+  }
+
+  private void linkSanGuo() {
+    CompletableFuture.allOf(
+            accountRepository.findAll().stream()
+                .map(
+                    account ->
+                        CompletableFuture.runAsync(
+                            () ->
+                                cacheService
+                                    .getToken(account.getLogin())
+                                    .ifPresent(
+                                        token -> {
+                                          String request =
+                                              "http://103spym.gamecity.ne.jp/100RTKSpecial/browser/top/home.php?guid=ON&date="
+                                                  + new Date().getTime();
+                                          String url =
+                                              "http://40e7b82553f00715f4a4027b8c4798c4b1b8c789.app.mbga-platform.jp/gadgets/makeRequest";
+                                          Map<String, Object> params = new HashMap<>();
+                                          params.put("url", request);
+                                          params.put("st", token);
+                                          params.put("authz", "signed");
+                                          httpClient.makePOSTRequest(url, params);
+                                        })))
+                .toArray(CompletableFuture[]::new))
+        .join();
   }
 
   /**
