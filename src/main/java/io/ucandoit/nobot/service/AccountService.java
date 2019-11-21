@@ -3,8 +3,10 @@ package io.ucandoit.nobot.service;
 import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
+import io.ucandoit.nobot.model.DrawHistory;
 import io.ucandoit.nobot.model.Parameter;
 import io.ucandoit.nobot.repository.AccountRepository;
+import io.ucandoit.nobot.repository.DrawHistoryRepository;
 import io.ucandoit.nobot.repository.ParameterRepository;
 import io.ucandoit.nobot.util.HttpUtils;
 import io.ucandoit.nobot.util.NobotUtils;
@@ -40,6 +42,8 @@ public class AccountService {
   @Resource private CacheService cacheService;
 
   @Resource private ParameterRepository parameterRepository;
+
+  @Resource private DrawHistoryRepository drawHistoryRepository;
 
   public List<AccountInfo> getAccountsGeneralInfo()
       throws ExecutionException, InterruptedException {
@@ -182,13 +186,76 @@ public class AccountService {
     return location.get();
   }
 
+  public void drawCard(String login, int type) {
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              ResponseEntity<String> response =
+                  httpClient.makePOSTRequest(NobotUtils.DRAW_URL, "POST", "type=" + type, token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              String cardUrl =
+                  obj.getJSONObject(NobotUtils.DRAW_URL)
+                      .getJSONObject("headers")
+                      .getJSONArray("location")
+                      .get(0)
+                      .toString();
+              response = httpClient.makePOSTRequest(cardUrl, "GET", null, token);
+              obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc = Jsoup.parse(obj.getJSONObject(cardUrl).getString("body"));
+              Element rarity = doc.selectFirst(".card-rarity");
+              if (rarity != null) {
+                int rarityCode = NobotUtils.getRarityCode(rarity.attr("src"));
+                if (rarityCode > 2) {
+                  DrawHistory drawHistory = new DrawHistory();
+                  drawHistory.setAccount(accountRepository.getOne(login));
+                  drawHistory.setDrawType(NobotUtils.getDrawType(type));
+                  drawHistory.setDrawTime(new Date());
+                  drawHistory.setName(doc.selectFirst(".card-name").text());
+                  drawHistory.setRarity(NobotUtils.getRarity(rarityCode));
+                  drawHistoryRepository.save(drawHistory);
+                }
+              }
+            });
+  }
+
+  public void drawCard(String login, int type, Integer times) {
+    CompletableFuture.runAsync(
+        () -> {
+          Integer count = times;
+          if (count == null || count == 0) {
+            log.info("Start drawing cards for {}", login);
+            boolean stop = false;
+            while (!stop) {
+              try {
+                drawCard(login, type);
+              } catch (Exception e) {
+                log.error("Error while drawing card for {}.", login);
+                stop = true;
+              }
+            }
+          } else if (count > 0) {
+            while (count > 0) {
+              try {
+                drawCard(login, type);
+                count--;
+              } catch (Exception e) {
+                log.error("Error while drawing card for {}.", login);
+                count = 0;
+              }
+            }
+          }
+          log.info("Stop drawing cards for {}", login);
+        });
+  }
+
   @Scheduled(cron = "0 10 16 * * *")
   @Transactional
   public void linkGame100SanGuo() {
     Parameter parameter = parameterRepository.getOne("100sanguo.login");
     if (enable && parameter.getValue().equals("1")) {
-        linkSanGuo();
-        linkSanGuo();
+      linkSanGuo();
+      linkSanGuo();
     } else {
       log.info("Scheduler for 100sanguo disabled.");
     }

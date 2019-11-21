@@ -59,6 +59,16 @@ public class AccountResource {
   }
 
   @RequestMapping(
+      value = "/draw/{login}/{type}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> drawCard(
+      @PathVariable String login, @PathVariable Integer type, Integer times) {
+    accountService.drawCard(login, type, times);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
       value = "/sanguo",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")

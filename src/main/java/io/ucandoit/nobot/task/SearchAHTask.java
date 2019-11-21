@@ -9,6 +9,7 @@ import io.ucandoit.nobot.repository.AuctionHistoryRepository;
 import io.ucandoit.nobot.repository.TaskRepository;
 import io.ucandoit.nobot.service.CacheService;
 import io.ucandoit.nobot.util.HttpUtils;
+import io.ucandoit.nobot.util.NobotUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -26,8 +27,6 @@ import java.net.URLDecoder;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.ScheduledFuture;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Component("searchAHTask")
@@ -210,7 +209,7 @@ public class SearchAHTask implements Runnable {
           card.setCardBuyId(className.replace("card-buy-id", ""));
         }
       }
-      card.setRarity(getRarity(cat.child(0).select(".rank_image_new").attr("src")));
+      card.setRarity(NobotUtils.getRarity(cat.child(0).select(".rank_image_new").attr("src")));
       card.setName(cat.child(1).select("u").text());
       card.setPrice(Integer.parseInt(cat.child(6).select(".point").text()));
 
@@ -233,30 +232,5 @@ public class SearchAHTask implements Runnable {
     }
 
     return null;
-  }
-
-  private String getRarity(String img) {
-    Pattern pattern = Pattern.compile("(.+/rare_0)(.?)(_.+)");
-    Matcher matcher = pattern.matcher(img);
-    if (matcher.find()) {
-      switch (matcher.group(2)) {
-        case "1":
-          return "並";
-        case "2":
-          return "珍";
-        case "3":
-          return "稀";
-        case "4":
-          return "極";
-        case "7":
-          return "煌";
-        case "6":
-          return "誉";
-        default:
-          return "Unknown";
-      }
-    } else {
-      return "Unknown";
-    }
   }
 }

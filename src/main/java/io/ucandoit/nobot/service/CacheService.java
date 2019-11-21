@@ -37,7 +37,7 @@ public class CacheService {
     } else {
       log.error("Account {} not found.", login);
     }
-    return null;
+    return Optional.empty();
   }
 
   @CachePut(value = "tokens", key = "#login")
