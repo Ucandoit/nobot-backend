@@ -35,7 +35,7 @@ import java.util.concurrent.*;
 @Slf4j
 public class WarService {
 
-  @Value("${scheduler.enable:true}")
+  @Value("${scheduler.war.enable:true}")
   private boolean enable;
 
   @Resource private AccountRepository accountRepository;
@@ -56,7 +56,7 @@ public class WarService {
 
   private Map<String, ScheduledFuture<?>> futureMap = new HashMap<>();
 
-  @Scheduled(cron = "0 59 4 * * *")
+  @Scheduled(cron = "${scheduler.war.stop}")
   public void dailyStop() {
     if (enable) {
       log.info("Daily stop.");
@@ -66,7 +66,7 @@ public class WarService {
     }
   }
 
-  @Scheduled(cron = "0 1 6 * * *")
+  @Scheduled(cron = "${scheduler.war.start}")
   @Transactional
   public void dailyStart() {
     if (enable) {

@@ -3,7 +3,6 @@ package io.ucandoit.nobot.task;
 import io.ucandoit.nobot.dto.Card;
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.AuctionHistory;
-import io.ucandoit.nobot.model.Task;
 import io.ucandoit.nobot.repository.AccountRepository;
 import io.ucandoit.nobot.repository.AuctionHistoryRepository;
 import io.ucandoit.nobot.repository.TaskRepository;
@@ -62,10 +61,10 @@ public class SearchAHTask implements Runnable {
       count++;
       if (count > 2000) {
         // stop running after reaching max attempts
-        Task task = taskRepository.getOne(taskId);
-        task.setRepeat(count);
-        task.setStopTime(new Date());
-        taskRepository.save(task);
+//        Task task = taskRepository.getOne(taskId);
+//        task.setRepeat(count);
+//        task.setStopTime(new Date());
+//        taskRepository.save(task);
         future.cancel(true);
         return;
       }
@@ -81,11 +80,11 @@ public class SearchAHTask implements Runnable {
         searchUrl = requestAHPage(token);
       }
       // register every 50 attempts
-      if (count % 50 == 0) {
-        Task task = taskRepository.getOne(taskId);
-        task.setRepeat(count);
-        taskRepository.save(task);
-      }
+//      if (count % 50 == 0) {
+//        Task task = taskRepository.getOne(taskId);
+//        task.setRepeat(count);
+//        taskRepository.save(task);
+//      }
       String response = requestAHSearch(searchUrl, token);
       if (response != null) {
         JSONObject obj = responseToJsonObject(response);

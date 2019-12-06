@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AccountService {
 
-  @Value("${scheduler.enable:true}")
+  @Value("${scheduler.account.enable:true}")
   private boolean enable;
 
   @Resource private AccountRepository accountRepository;
@@ -132,7 +132,7 @@ public class AccountService {
             });
   }
 
-  @Scheduled(cron = "0 */30 * * * *")
+  @Scheduled(cron = "${scheduler.account.tokenUpdate}")
   @Transactional
   public void updateTokens() {
     CompletableFuture.allOf(
@@ -145,7 +145,7 @@ public class AccountService {
         .join();
   }
 
-  @Scheduled(cron = "0 1 16 * * *")
+  @Scheduled(cron = "${scheduler.account.login}")
   @Transactional
   public void dailyLogin() {
     if (enable) {
@@ -249,7 +249,7 @@ public class AccountService {
         });
   }
 
-  @Scheduled(cron = "0 10 16 * * *")
+  @Scheduled(cron = "${scheduler.account.100sanguo}")
   @Transactional
   public void linkGame100SanGuo() {
     Parameter parameter = parameterRepository.getOne("100sanguo.login");
