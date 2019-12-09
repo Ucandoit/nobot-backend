@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,12 +55,16 @@ public class SearchAHTask implements Runnable {
 
   private int count = 0;
 
+  @Value("${auction.repeat}")
+  private int maxValue;
+
   @Override
   @Transactional
   public void run() {
     try {
       count++;
-      if (count > 2000) {
+      if (count > maxValue) {
+        log.info("Max count reached, stop for {}.", login);
         // stop running after reaching max attempts
 //        Task task = taskRepository.getOne(taskId);
 //        task.setRepeat(count);

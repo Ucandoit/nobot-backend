@@ -131,6 +131,9 @@ public class AuctionService {
   }
 
   private int calculateInitialDelay(int startHour) {
+    if (startHour >= 24) {
+      startHour = startHour - 24;
+    }
     Calendar calendar = GregorianCalendar.getInstance();
     calendar.setTime(new Date());
     int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
