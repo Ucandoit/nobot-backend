@@ -3,10 +3,7 @@ package io.ucandoit.nobot.rest;
 import io.ucandoit.nobot.service.StoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -49,6 +46,24 @@ public class StoryResource {
       produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> stopStory(@PathVariable String login) {
     storyService.stopStory(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+          value = "/reward/{login}",
+          method = RequestMethod.GET,
+          produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> getReward(@PathVariable String login, @RequestParam int type) {
+    storyService.getReward(login, type);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+          value = "/allReward",
+          method = RequestMethod.GET,
+          produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> getAllReward(@RequestParam int type) {
+    storyService.getAllReward(type);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }

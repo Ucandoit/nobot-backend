@@ -13,6 +13,10 @@ public class NobotUtils {
 
   public static final String DRAW_URL = "http://210.140.157.168/nyaomikuji/nyaomikuji.htm";
 
+  public static final String STORY_CHAPTER_REWARD = "http://210.140.157.168/cattale/chapter_reward_list.htm";
+
+  public static final String STORY_POINT_REWARD = "http://210.140.157.168/cattale/point_reward_list.htm";
+
   /**
    * Get card rarity code from image url
    *

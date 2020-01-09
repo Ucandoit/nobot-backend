@@ -1,10 +1,18 @@
 package io.ucandoit.nobot.service;
 
+import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
 import io.ucandoit.nobot.repository.AccountRepository;
 import io.ucandoit.nobot.task.StoryTask;
+import io.ucandoit.nobot.util.HttpUtils;
+import io.ucandoit.nobot.util.NobotUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -28,6 +36,10 @@ public class StoryService {
   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(50);
 
   private Map<String, ScheduledFuture<?>> futureMap = new HashMap<>();
+
+  @Resource private CacheService cacheService;
+
+  @Resource private HttpClient httpClient;
 
   public void startAll() {
     stopAll();
@@ -54,6 +66,31 @@ public class StoryService {
     if (future != null && !future.isDone()) {
       future.cancel(true);
     }
+  }
+
+  public void getAllReward(int type) {
+    List<Account> accounts = accountRepository.findAll();
+    for (Account account: accounts) {
+      getReward(account.getLogin(), type);
+    }
+  }
+
+  public void getReward(String login, int type) {
+    cacheService.getToken(login).ifPresent(token -> {
+      log.info("get {} rewards for {}", type == 1 ? "chapter" : "point", login);
+      String url = type == 1 ? NobotUtils.STORY_CHAPTER_REWARD : NobotUtils.STORY_POINT_REWARD;
+      ResponseEntity<String> response = httpClient.makePOSTRequest(url, "GET", null, token);
+      JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+      Document doc = Jsoup.parse(obj.getJSONObject(url).getString("body"));
+      List<Element> forms = doc.select("#content table form");
+      if (forms != null && !forms.isEmpty()) {
+        for (Element form: forms) {
+          httpClient.makePOSTRequest(url, "POST", HttpUtils.buildPostData(form), token);
+        }
+      } else {
+        log.info("All rewards are taken {}", login);
+      }
+    });
   }
 
   private void startStory(Account account) {
