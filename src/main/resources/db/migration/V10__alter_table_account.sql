@@ -1,0 +1,1 @@
+ALTER TABLE account ADD COLUMN recruit_id VARCHAR(255);

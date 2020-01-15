@@ -287,6 +287,39 @@ public class AccountService {
         .join();
   }
 
+  public void updateRecruitStatus() {
+    CompletableFuture.allOf(
+            accountRepository.findAll().stream()
+                .map(
+                    account ->
+                        CompletableFuture.runAsync(
+                            () ->
+                                cacheService
+                                    .getToken(account.getLogin())
+                                    .ifPresent(
+                                        token -> {
+                                          ResponseEntity<String> response =
+                                              httpClient.makePOSTRequest(
+                                                  NobotUtils.FRIEND_CODE_URL, "GET", null, token);
+                                          JSONObject obj =
+                                              HttpUtils.responseToJsonObject(response.getBody());
+                                          Document doc =
+                                              Jsoup.parse(
+                                                  obj.getJSONObject(NobotUtils.FRIEND_CODE_URL)
+                                                      .getString("body"));
+                                          String recruitId =
+                                              doc.selectFirst("#main .twitter-share-button")
+                                                  .parent()
+                                                  .parent()
+                                                  .selectFirst("div")
+                                                  .text();
+                                          account.setRecruitId(recruitId);
+                                          accountRepository.save(account);
+                                        })))
+                .toArray(CompletableFuture[]::new))
+        .join();
+  }
+
   /**
    * Get a node's integer value by id
    *

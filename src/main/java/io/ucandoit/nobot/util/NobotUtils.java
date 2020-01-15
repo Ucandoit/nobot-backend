@@ -45,6 +45,8 @@ public class NobotUtils {
 
   public static final String NOTIFY_UPDATE_URL = "http://210.140.157.168/notify_update.htm";
 
+  public static final String FRIEND_CODE_URL = "http://210.140.157.168/user/friend_code.htm";
+
   /**
    * Get card rarity code from image url
    *

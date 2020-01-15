@@ -31,4 +31,7 @@ public class Account {
 
   @Column(name = "enabled")
   private Boolean enabled;
+
+  @Column(name = "recruit_id")
+  private String recruitId;
 }

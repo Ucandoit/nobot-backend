@@ -76,4 +76,13 @@ public class AccountResource {
     accountService.linkGame100SanGuo();
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
+
+  @RequestMapping(
+      value = "/recruit/update_status",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> updateRecruitStatus() {
+    accountService.updateRecruitStatus();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 }
