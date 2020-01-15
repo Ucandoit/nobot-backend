@@ -50,18 +50,18 @@ public class StoryResource {
   }
 
   @RequestMapping(
-          value = "/reward/{login}",
-          method = RequestMethod.GET,
-          produces = "application/json; charset=UTF-8")
+      value = "/reward/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> getReward(@PathVariable String login, @RequestParam int type) {
     storyService.getReward(login, type);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 
   @RequestMapping(
-          value = "/allReward",
-          method = RequestMethod.GET,
-          produces = "application/json; charset=UTF-8")
+      value = "/allReward",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> getAllReward(@RequestParam int type) {
     storyService.getAllReward(type);
     return new ResponseEntity<>(true, HttpStatus.OK);

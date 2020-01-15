@@ -105,18 +105,19 @@ public class AuctionService {
       if (account.getExpirationDate().after(new Date())) {
         log.info("Start sniping AH for account {}.", account.getLogin());
 
-//        Task task = new Task();
-//        task.setAccount(account);
-//        task.setTaskType("SNIPE_AH");
-//        task.setStartTime(new Date());
-//        task.setRepeat(0);
-//        task = taskRepository.save(task);
+        //        Task task = new Task();
+        //        task.setAccount(account);
+        //        task.setTaskType("SNIPE_AH");
+        //        task.setStartTime(new Date());
+        //        task.setRepeat(0);
+        //        task = taskRepository.save(task);
 
         SearchAHTask searchAHTask = (SearchAHTask) beanFactory.getBean("searchAHTask");
-//        searchAHTask.setTaskId(task.getId());
+        //        searchAHTask.setTaskId(task.getId());
         searchAHTask.setLogin(account.getLogin());
         searchAHTask.setCount(startCount);
-        int initialDelay = immediate ? 0 : calculateInitialDelay(account.getStartHour() + hourOffset);
+        int initialDelay =
+            immediate ? 0 : calculateInitialDelay(account.getStartHour() + hourOffset);
         ScheduledFuture future =
             executorService.scheduleAtFixedRate(searchAHTask, initialDelay, 5, TimeUnit.SECONDS);
         searchAHTask.setFuture(future);

@@ -70,27 +70,31 @@ public class StoryService {
 
   public void getAllReward(int type) {
     List<Account> accounts = accountRepository.findAll();
-    for (Account account: accounts) {
+    for (Account account : accounts) {
       getReward(account.getLogin(), type);
     }
   }
 
   public void getReward(String login, int type) {
-    cacheService.getToken(login).ifPresent(token -> {
-      log.info("get {} rewards for {}", type == 1 ? "chapter" : "point", login);
-      String url = type == 1 ? NobotUtils.STORY_CHAPTER_REWARD : NobotUtils.STORY_POINT_REWARD;
-      ResponseEntity<String> response = httpClient.makePOSTRequest(url, "GET", null, token);
-      JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
-      Document doc = Jsoup.parse(obj.getJSONObject(url).getString("body"));
-      List<Element> forms = doc.select("#content table form");
-      if (forms != null && !forms.isEmpty()) {
-        for (Element form: forms) {
-          httpClient.makePOSTRequest(url, "POST", HttpUtils.buildPostData(form), token);
-        }
-      } else {
-        log.info("All rewards are taken {}", login);
-      }
-    });
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              log.info("get {} rewards for {}", type == 1 ? "chapter" : "point", login);
+              String url =
+                  type == 1 ? NobotUtils.STORY_CHAPTER_REWARD : NobotUtils.STORY_POINT_REWARD;
+              ResponseEntity<String> response = httpClient.makePOSTRequest(url, "GET", null, token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc = Jsoup.parse(obj.getJSONObject(url).getString("body"));
+              List<Element> forms = doc.select("#content table form");
+              if (forms != null && !forms.isEmpty()) {
+                for (Element form : forms) {
+                  httpClient.makePOSTRequest(url, "POST", HttpUtils.buildPostData(form), token);
+                }
+              } else {
+                log.info("All rewards are taken {}", login);
+              }
+            });
   }
 
   private void startStory(Account account) {

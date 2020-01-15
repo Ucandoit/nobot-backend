@@ -66,10 +66,10 @@ public class SearchAHTask implements Runnable {
       if (count > maxValue) {
         log.info("Max count reached, stop for {}.", login);
         // stop running after reaching max attempts
-//        Task task = taskRepository.getOne(taskId);
-//        task.setRepeat(count);
-//        task.setStopTime(new Date());
-//        taskRepository.save(task);
+        //        Task task = taskRepository.getOne(taskId);
+        //        task.setRepeat(count);
+        //        task.setStopTime(new Date());
+        //        taskRepository.save(task);
         future.cancel(true);
         return;
       }
@@ -85,11 +85,11 @@ public class SearchAHTask implements Runnable {
         searchUrl = requestAHPage(token);
       }
       // register every 50 attempts
-//      if (count % 50 == 0) {
-//        Task task = taskRepository.getOne(taskId);
-//        task.setRepeat(count);
-//        taskRepository.save(task);
-//      }
+      //      if (count % 50 == 0) {
+      //        Task task = taskRepository.getOne(taskId);
+      //        task.setRepeat(count);
+      //        taskRepository.save(task);
+      //      }
       String response = requestAHSearch(searchUrl, token);
       if (response != null) {
         JSONObject obj = responseToJsonObject(response);

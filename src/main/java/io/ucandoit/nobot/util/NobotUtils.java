@@ -5,6 +5,8 @@ import java.util.regex.Pattern;
 
 public class NobotUtils {
 
+  public static final String BASE_URL = "http://210.140.157.168";
+
   public static final String MAP_URL = "http://210.140.157.168/area_map.htm";
 
   public static final String PROFILE_URL = "http://210.140.157.168/user/profile.htm";
@@ -13,9 +15,35 @@ public class NobotUtils {
 
   public static final String DRAW_URL = "http://210.140.157.168/nyaomikuji/nyaomikuji.htm";
 
-  public static final String STORY_CHAPTER_REWARD = "http://210.140.157.168/cattale/chapter_reward_list.htm";
+  public static final String STORY_CHAPTER_REWARD =
+      "http://210.140.157.168/cattale/chapter_reward_list.htm";
 
-  public static final String STORY_POINT_REWARD = "http://210.140.157.168/cattale/point_reward_list.htm";
+  public static final String STORY_POINT_REWARD =
+      "http://210.140.157.168/cattale/point_reward_list.htm";
+
+  public static final String BATTLE_URL = "http://210.140.157.168/battle/setup.htm";
+
+  public static final String TUTORIAL_URL = "http://210.140.157.168/tutorial/tutorial.htm";
+
+  public static final String REPORT_LIST_URL = "http://210.140.157.168/report/list.htm";
+
+  public static final String COMMAND_URL = "http://210.140.157.168/command.htm";
+
+  public static final String MANAGE_CARD_URL = "http://210.140.157.168/card/manage_card.htm";
+
+  public static final String MANAGE_STORE_CARD_URL = MANAGE_CARD_URL + "?status=2";
+
+  public static final String RECRUIT_CARD_URL = "http://210.140.157.168/card/sub/recurit_card.htm";
+
+  public static final String MANAGE_DECK_URL = "http://210.140.157.168/card/manage_deck.htm";
+
+  public static final String BUILD_URL = "http://210.140.157.168/build.htm";
+
+  public static final String VILLAGE_URL = "http://210.140.157.168/village.htm";
+
+  public static final String DROP_DIALOG_URL = "http://210.140.157.168/dropdlg.htm";
+
+  public static final String NOTIFY_UPDATE_URL = "http://210.140.157.168/notify_update.htm";
 
   /**
    * Get card rarity code from image url
