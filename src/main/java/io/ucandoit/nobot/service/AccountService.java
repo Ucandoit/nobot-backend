@@ -307,17 +307,32 @@ public class AccountService {
                                               Jsoup.parse(
                                                   obj.getJSONObject(NobotUtils.FRIEND_CODE_URL)
                                                       .getString("body"));
-                                          String recruitId =
+                                          String friendCode =
                                               doc.selectFirst("#main .twitter-share-button")
                                                   .parent()
                                                   .parent()
                                                   .selectFirst("div")
                                                   .text();
-                                          account.setRecruitId(recruitId);
+                                          account.setFriendCode(friendCode);
                                           accountRepository.save(account);
                                         })))
                 .toArray(CompletableFuture[]::new))
         .join();
+  }
+
+  public void attachFriendCode(List<String> sources, String target) {
+    sources.forEach(source -> attachFriendCode(source, target));
+  }
+
+  public void attachFriendCode(String source, String target) {
+    String friendCode = accountRepository.getOne(target).getFriendCode();
+    cacheService
+        .getToken(source)
+        .ifPresent(
+            token -> {
+              httpClient.makePOSTRequest(
+                  NobotUtils.FRIEND_CODE_URL, "POST", "friendCode=" + friendCode, token);
+            });
   }
 
   /**

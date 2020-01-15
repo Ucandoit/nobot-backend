@@ -33,5 +33,5 @@ public class Account {
   private Boolean enabled;
 
   @Column(name = "recruit_id")
-  private String recruitId;
+  private String friendCode;
 }

@@ -5,10 +5,7 @@ import io.ucandoit.nobot.service.AccountService;
 import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -83,6 +80,26 @@ public class AccountResource {
       produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> updateRecruitStatus() {
     accountService.updateRecruitStatus();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/recruit/multi_attach_code/{target}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> multipleAttachCode(
+      @PathVariable String target, @RequestParam List<String> sources) {
+    accountService.attachFriendCode(sources, target);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/recruit/attach_code/{target}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> attachCode(
+      @PathVariable String target, @RequestParam String source) {
+    accountService.attachFriendCode(source, target);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }
