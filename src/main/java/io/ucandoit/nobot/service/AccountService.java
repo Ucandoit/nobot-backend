@@ -335,6 +335,28 @@ public class AccountService {
             });
   }
 
+  public void inviterReward(String login) {
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              ResponseEntity<String> response =
+                  httpClient.makePOSTRequest(NobotUtils.FRIEND_CODE_URL, "GET", null, token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc =
+                  Jsoup.parse(obj.getJSONObject(NobotUtils.FRIEND_CODE_URL).getString("body"));
+              doc.select("form")
+                  .forEach(
+                      form -> {
+                        httpClient.makePOSTRequest(
+                            NobotUtils.FRIEND_CODE_URL,
+                            "POST",
+                            HttpUtils.buildPostData(form),
+                            token);
+                      });
+            });
+  }
+
   /**
    * Get a node's integer value by id
    *

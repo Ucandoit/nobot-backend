@@ -102,4 +102,13 @@ public class AccountResource {
     accountService.attachFriendCode(source, target);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
+
+  @RequestMapping(
+      value = "/recruit/inviterReward/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> inviterReward(@PathVariable String login) {
+    accountService.inviterReward(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 }
