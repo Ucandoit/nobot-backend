@@ -56,6 +56,15 @@ public class AccountResource {
   }
 
   @RequestMapping(
+      value = "/draw/update_status",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> updateDrawStatus() {
+    accountService.updateDrawStatus();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
       value = "/draw/{login}/{type}",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")

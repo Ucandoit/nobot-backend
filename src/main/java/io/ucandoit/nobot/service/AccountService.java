@@ -4,9 +4,11 @@ import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
 import io.ucandoit.nobot.model.DrawHistory;
+import io.ucandoit.nobot.model.DrawStatus;
 import io.ucandoit.nobot.model.Parameter;
 import io.ucandoit.nobot.repository.AccountRepository;
 import io.ucandoit.nobot.repository.DrawHistoryRepository;
+import io.ucandoit.nobot.repository.DrawStatusRepository;
 import io.ucandoit.nobot.repository.ParameterRepository;
 import io.ucandoit.nobot.util.HttpUtils;
 import io.ucandoit.nobot.util.NobotUtils;
@@ -25,6 +27,7 @@ import javax.transaction.Transactional;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -44,6 +47,8 @@ public class AccountService {
   @Resource private ParameterRepository parameterRepository;
 
   @Resource private DrawHistoryRepository drawHistoryRepository;
+
+  @Resource private DrawStatusRepository drawStatusRepository;
 
   public List<AccountInfo> getAccountsGeneralInfo()
       throws ExecutionException, InterruptedException {
@@ -220,33 +225,37 @@ public class AccountService {
   }
 
   public void drawCard(String login, int type, Integer times) {
-    CompletableFuture.runAsync(
-        () -> {
-          Integer count = times;
-          if (count == null || count == 0) {
-            log.info("Start drawing cards for {}", login);
-            boolean stop = false;
-            while (!stop) {
-              try {
-                drawCard(login, type);
-              } catch (Exception e) {
-                log.error("Error while drawing card for {}.", login);
-                stop = true;
+    if (type == 0) {
+      drawFukubiki(login);
+    } else {
+      CompletableFuture.runAsync(
+          () -> {
+            Integer count = times;
+            if (count == null || count == 0) {
+              log.info("Start drawing cards for {}", login);
+              boolean stop = false;
+              while (!stop) {
+                try {
+                  drawCard(login, type);
+                } catch (Exception e) {
+                  log.error("Error while drawing card for {}.", login);
+                  stop = true;
+                }
+              }
+            } else if (count > 0) {
+              while (count > 0) {
+                try {
+                  drawCard(login, type);
+                  count--;
+                } catch (Exception e) {
+                  log.error("Error while drawing card for {}.", login);
+                  count = 0;
+                }
               }
             }
-          } else if (count > 0) {
-            while (count > 0) {
-              try {
-                drawCard(login, type);
-                count--;
-              } catch (Exception e) {
-                log.error("Error while drawing card for {}.", login);
-                count = 0;
-              }
-            }
-          }
-          log.info("Stop drawing cards for {}", login);
-        });
+            log.info("Stop drawing cards for {}", login);
+          });
+    }
   }
 
   @Scheduled(cron = "${scheduler.account.100sanguo}")
@@ -354,6 +363,76 @@ public class AccountService {
                             HttpUtils.buildPostData(form),
                             token);
                       });
+            });
+  }
+
+  public void updateDrawStatus() {
+    CompletableFuture.allOf(
+            accountRepository.findAll().stream()
+                .map(
+                    account ->
+                        CompletableFuture.runAsync(
+                            () ->
+                                cacheService
+                                    .getToken(account.getLogin())
+                                    .ifPresent(token -> saveDrawStatus(token, account.getLogin()))))
+                .toArray(CompletableFuture[]::new))
+        .join();
+  }
+
+  public void saveDrawStatus(String token, String login) {
+    DrawStatus drawStatus = new DrawStatus();
+    drawStatus.setLogin(login);
+    ResponseEntity<String> response =
+        httpClient.makePOSTRequest(NobotUtils.DRAW_URL, "GET", null, token);
+    JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+    Document doc = Jsoup.parse(obj.getJSONObject(NobotUtils.DRAW_URL).getString("body"));
+    Element fukubikiZone = doc.selectFirst("#fstart");
+    if (fukubikiZone != null) {
+      Integer fukubikiNumber =
+          Integer.parseInt(
+              doc.selectFirst("#fstart")
+                  .parent()
+                  .parent()
+                  .selectFirst("div")
+                  .selectFirst(".red")
+                  .text());
+      drawStatus.setFukubikiNumber(fukubikiNumber);
+    }
+    drawStatusRepository.save(drawStatus);
+  }
+
+  public void drawFukubiki(String login) {
+    DrawStatus drawStatus = drawStatusRepository.getOne(login);
+    AtomicInteger number = new AtomicInteger(drawStatus.getFukubikiNumber());
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              while (number.get() >= 10) {
+                httpClient.makePOSTRequest(
+                    NobotUtils.FUKUBIKI_START_URL, "POST", "num=" + number.get(), token);
+                ResponseEntity<String> response =
+                    httpClient.makePOSTRequest(NobotUtils.FUKUBIKU_RESULT_URL, "GET", null, token);
+                JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+                Document doc =
+                    Jsoup.parse(
+                        obj.getJSONObject(NobotUtils.FUKUBIKU_RESULT_URL).getString("body"));
+                Element rarity = doc.selectFirst(".card-rarity");
+                if (rarity != null) {
+                  int rarityCode = NobotUtils.getRarityCode(rarity.attr("src"));
+                  if (rarityCode > 2) {
+                    DrawHistory drawHistory = new DrawHistory();
+                    drawHistory.setAccount(accountRepository.getOne(login));
+                    drawHistory.setDrawType(NobotUtils.getDrawType(0));
+                    drawHistory.setDrawTime(new Date());
+                    drawHistory.setName(doc.selectFirst(".card-name").text());
+                    drawHistory.setRarity(NobotUtils.getRarity(rarityCode));
+                    drawHistoryRepository.save(drawHistory);
+                  }
+                }
+                number.addAndGet(-10);
+              }
             });
   }
 

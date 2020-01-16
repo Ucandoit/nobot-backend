@@ -47,6 +47,12 @@ public class NobotUtils {
 
   public static final String FRIEND_CODE_URL = "http://210.140.157.168/user/friend_code.htm";
 
+  public static final String FUKUBIKI_START_URL =
+      "http://210.140.157.168/nyaomikuji/fukubiki_start.htm";
+
+  public static final String FUKUBIKU_RESULT_URL =
+      "http://210.140.157.168/nyaomikuji/fukubiki_result.htm";
+
   /**
    * Get card rarity code from image url
    *
@@ -110,6 +116,8 @@ public class NobotUtils {
         return "吉";
       case 5:
         return "福";
+      case 0:
+        return "新春福引";
       default:
         return "Unknown";
     }
