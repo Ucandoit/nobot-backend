@@ -27,7 +27,10 @@ public class Account {
   private Date expirationDate;
 
   @Column(name = "start_hour")
-  private Integer startHour;
+  private int startHour;
+
+  @Column(name = "daily_search")
+  private int dailySearch;
 
   @Column(name = "enabled")
   private Boolean enabled;
