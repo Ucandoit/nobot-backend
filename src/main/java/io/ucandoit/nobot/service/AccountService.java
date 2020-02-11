@@ -191,70 +191,11 @@ public class AccountService {
     return location.get();
   }
 
-  public void drawCard(String login, int type) {
-    cacheService
-        .getToken(login)
-        .ifPresent(
-            token -> {
-              ResponseEntity<String> response =
-                  httpClient.makePOSTRequest(NobotUtils.DRAW_URL, "POST", "type=" + type, token);
-              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
-              String cardUrl =
-                  obj.getJSONObject(NobotUtils.DRAW_URL)
-                      .getJSONObject("headers")
-                      .getJSONArray("location")
-                      .get(0)
-                      .toString();
-              response = httpClient.makePOSTRequest(cardUrl, "GET", null, token);
-              obj = HttpUtils.responseToJsonObject(response.getBody());
-              Document doc = Jsoup.parse(obj.getJSONObject(cardUrl).getString("body"));
-              Element rarity = doc.selectFirst(".card-rarity");
-              if (rarity != null) {
-                int rarityCode = NobotUtils.getRarityCode(rarity.attr("src"));
-                if (rarityCode > 2) {
-                  DrawHistory drawHistory = new DrawHistory();
-                  drawHistory.setAccount(accountRepository.getOne(login));
-                  drawHistory.setDrawType(NobotUtils.getDrawType(type));
-                  drawHistory.setDrawTime(new Date());
-                  drawHistory.setName(doc.selectFirst(".card-name").text());
-                  drawHistory.setRarity(NobotUtils.getRarity(rarityCode));
-                  drawHistoryRepository.save(drawHistory);
-                }
-              }
-            });
-  }
-
   public void drawCard(String login, int type, Integer times) {
     if (type == 0) {
       drawFukubiki(login);
     } else {
-      CompletableFuture.runAsync(
-          () -> {
-            Integer count = times;
-            if (count == null || count == 0) {
-              log.info("Start drawing cards for {}", login);
-              boolean stop = false;
-              while (!stop) {
-                try {
-                  drawCard(login, type);
-                } catch (Exception e) {
-                  log.error("Error while drawing card for {}.", login);
-                  stop = true;
-                }
-              }
-            } else if (count > 0) {
-              while (count > 0) {
-                try {
-                  drawCard(login, type);
-                  count--;
-                } catch (Exception e) {
-                  log.error("Error while drawing card for {}.", login);
-                  count = 0;
-                }
-              }
-            }
-            log.info("Stop drawing cards for {}", login);
-          });
+      drawFuji(login, type, times);
     }
   }
 
@@ -399,6 +340,20 @@ public class AccountService {
                   .text());
       drawStatus.setFukubikiNumber(fukubikiNumber);
     }
+    Element fuZone = doc.selectFirst("img[alt=ニャオみくじ・福]");
+    if (fuZone != null) {
+      Integer fuNumber =
+          Integer.parseInt(
+              fuZone.parent().selectFirst(".lot-explain").select(".red").last().text());
+      drawStatus.setFuNumber(fuNumber);
+    }
+    Element jiZone = doc.selectFirst("img[alt=ニャオみくじ・吉]");
+    if (jiZone != null) {
+      Integer jiNumber =
+          Integer.parseInt(
+              jiZone.parent().selectFirst(".lot-explain").select(".red").last().text());
+      drawStatus.setJiNumber(jiNumber);
+    }
     drawStatusRepository.save(drawStatus);
   }
 
@@ -418,22 +373,70 @@ public class AccountService {
                 Document doc =
                     Jsoup.parse(
                         obj.getJSONObject(NobotUtils.FUKUBIKU_RESULT_URL).getString("body"));
-                Element rarity = doc.selectFirst(".card-rarity");
-                if (rarity != null) {
-                  int rarityCode = NobotUtils.getRarityCode(rarity.attr("src"));
-                  if (rarityCode > 2) {
-                    DrawHistory drawHistory = new DrawHistory();
-                    drawHistory.setAccount(accountRepository.getOne(login));
-                    drawHistory.setDrawType(NobotUtils.getDrawType(0));
-                    drawHistory.setDrawTime(new Date());
-                    drawHistory.setName(doc.selectFirst(".card-name").text());
-                    drawHistory.setRarity(NobotUtils.getRarity(rarityCode));
-                    drawHistoryRepository.save(drawHistory);
-                  }
-                }
+                saveIfRare(login, doc, 0);
                 number.addAndGet(-10);
               }
             });
+  }
+
+  private void drawFuji(String login, int type, Integer times) {
+    log.info("Start drawing cards for {}", login);
+    AtomicInteger numbers = new AtomicInteger(getDrawNumbers(login, type, times));
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              while (numbers.get() > 0) {
+                ResponseEntity<String> response =
+                    httpClient.makePOSTRequest(NobotUtils.DRAW_URL, "POST", "type=" + type, token);
+                JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+                String cardUrl =
+                    obj.getJSONObject(NobotUtils.DRAW_URL)
+                        .getJSONObject("headers")
+                        .getJSONArray("location")
+                        .get(0)
+                        .toString();
+                response = httpClient.makePOSTRequest(cardUrl, "GET", null, token);
+                obj = HttpUtils.responseToJsonObject(response.getBody());
+                Document doc = Jsoup.parse(obj.getJSONObject(cardUrl).getString("body"));
+                saveIfRare(login, doc, type);
+                numbers.getAndDecrement();
+              }
+            });
+    log.info("Stop drawing cards for {}", login);
+  }
+
+  private int getDrawNumbers(String login, int type, Integer times) {
+    if (times != null) {
+      return times;
+    }
+    DrawStatus drawStatus = drawStatusRepository.getOne(login);
+    switch (type) {
+      case 0:
+        return drawStatus.getFukubikiNumber();
+      case 4:
+        return drawStatus.getJiNumber();
+      case 5:
+        return drawStatus.getFuNumber();
+      default:
+        return 0;
+    }
+  }
+
+  private void saveIfRare(String login, Document doc, int type) {
+    Element rarity = doc.selectFirst(".card-rarity");
+    if (rarity != null) {
+      int rarityCode = NobotUtils.getRarityCode(rarity.attr("src"));
+      if (rarityCode > 2) {
+        DrawHistory drawHistory = new DrawHistory();
+        drawHistory.setAccount(accountRepository.getOne(login));
+        drawHistory.setDrawType(NobotUtils.getDrawType(type));
+        drawHistory.setDrawTime(new Date());
+        drawHistory.setName(doc.selectFirst(".card-name").text());
+        drawHistory.setRarity(NobotUtils.getRarity(rarityCode));
+        drawHistoryRepository.save(drawHistory);
+      }
+    }
   }
 
   /**
