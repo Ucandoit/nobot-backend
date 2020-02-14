@@ -1,6 +1,7 @@
 package io.ucandoit.nobot.service;
 
 import io.ucandoit.nobot.dto.AccountInfo;
+import io.ucandoit.nobot.dto.CardInfo;
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
 import io.ucandoit.nobot.model.DrawHistory;
@@ -17,6 +18,7 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -377,6 +379,38 @@ public class AccountService {
                 number.addAndGet(-10);
               }
             });
+  }
+
+  public List<CardInfo> getReserveCards(String login) {
+    AtomicReference<List<CardInfo>> cardInfos = new AtomicReference<>(new ArrayList<>());
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              ResponseEntity<String> response =
+                  httpClient.makePOSTRequest(NobotUtils.VILLAGE_URL, "GET", null, token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc =
+                  Jsoup.parse(obj.getJSONObject(NobotUtils.VILLAGE_URL).getString("body"));
+              Elements cards = doc.select(".reserve-rect");
+              cardInfos.set(
+                  cards.stream()
+                      .map(
+                          card -> {
+                            Element img = card.selectFirst(".reserve-face");
+                            CardInfo cardInfo = new CardInfo();
+
+                            cardInfo.setId(
+                                img.className().split(" ")[0].replace("face-card-id", ""));
+                            cardInfo.setName(img.attr("title"));
+                            cardInfo.setTradable(
+                                !img.hasClass("protected") && !img.hasClass("trade-limit"));
+                            cardInfo.setImgUrl(img.attr("src"));
+                            return cardInfo;
+                          })
+                      .collect(Collectors.toList()));
+            });
+    return cardInfos.get();
   }
 
   private void drawFuji(String login, int type, Integer times) {
