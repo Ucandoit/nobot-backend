@@ -53,6 +53,8 @@ public class NobotUtils {
   public static final String FUKUBIKU_RESULT_URL =
       "http://210.140.157.168/nyaomikuji/fukubiki_result.htm";
 
+  public static final String CARD_DETAIL_URL = "http://210.140.157.168/card/sub/get_card_detail.htm";
+
   /**
    * Get card rarity code from image url
    *

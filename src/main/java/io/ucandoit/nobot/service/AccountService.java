@@ -409,8 +409,32 @@ public class AccountService {
                             return cardInfo;
                           })
                       .collect(Collectors.toList()));
+              CompletableFuture.allOf(
+                      cardInfos.get().stream()
+                          .map(
+                              cardInfo ->
+                                  CompletableFuture.runAsync(
+                                      () -> getCardDetail(token, cardInfo)))
+                          .toArray(CompletableFuture[]::new))
+                  .join();
             });
     return cardInfos.get();
+  }
+
+  private void getCardDetail(String token, CardInfo cardInfo) {
+    ResponseEntity<String> response =
+        httpClient.makePOSTRequest(NobotUtils.CARD_DETAIL_URL, "POST", "cardid=" + cardInfo.getId(), token);
+    JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+    Document doc = Jsoup.parse(obj.getJSONObject(NobotUtils.CARD_DETAIL_URL).getString("body"));
+    cardInfo.setRefineTotal(doc.selectFirst(".card-refine-total").text());
+    cardInfo.setRefineAtk(doc.selectFirst(".card-refine-atk").text());
+    cardInfo.setRefineDef(doc.selectFirst(".card-refine-def").text());
+    cardInfo.setRefineSpd(doc.selectFirst(".card-refine-spd").text());
+    cardInfo.setRefineVir(doc.selectFirst(".card-refine-vir").text());
+    cardInfo.setRefineStg(doc.selectFirst(".card-refine-stg").text());
+    cardInfo.setSkill1(doc.selectFirst(".card-skill1").text() + doc.selectFirst(".card-skill-lv1").text());
+    cardInfo.setSkill2(doc.selectFirst(".card-skill2").text() + doc.selectFirst(".card-skill-lv2").text());
+    cardInfo.setSkill3(doc.selectFirst(".card-skill3").text() + doc.selectFirst(".card-skill-lv3").text());
   }
 
   private void drawFuji(String login, int type, Integer times) {
