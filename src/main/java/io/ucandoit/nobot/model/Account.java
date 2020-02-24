@@ -37,4 +37,7 @@ public class Account {
 
   @Column(name = "recruit_id")
   private String friendCode;
+
+  @Column(name = "np")
+  private Integer np;
 }

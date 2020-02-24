@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @RestController
@@ -120,6 +121,22 @@ public class AccountResource {
   public ResponseEntity<Boolean> inviterReward(@PathVariable String login) {
     accountService.inviterReward(login);
     return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/cardJi",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Map<String, String>> cardJi() {
+    return new ResponseEntity<>(accountService.getJi(), HttpStatus.OK);
+  }
+
+  @RequestMapping(
+          value = "/updateNp",
+          method = RequestMethod.GET,
+          produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Integer> getNp() {
+    return new ResponseEntity<>(accountService.updateNp(), HttpStatus.OK);
   }
 
   @RequestMapping(

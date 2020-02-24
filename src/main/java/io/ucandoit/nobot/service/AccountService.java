@@ -413,28 +413,95 @@ public class AccountService {
                       cardInfos.get().stream()
                           .map(
                               cardInfo ->
-                                  CompletableFuture.runAsync(
-                                      () -> getCardDetail(token, cardInfo)))
+                                  CompletableFuture.runAsync(() -> getCardDetail(token, cardInfo)))
                           .toArray(CompletableFuture[]::new))
                   .join();
             });
     return cardInfos.get();
   }
 
+  public int updateNp() {
+      AtomicInteger total = new AtomicInteger();
+    CompletableFuture.allOf(
+            accountRepository.findAll().stream()
+                .map(
+                    account ->
+                        CompletableFuture.runAsync(
+                            () ->
+                                cacheService
+                                    .getToken(account.getLogin())
+                                    .ifPresent(
+                                        token -> {
+                                            ResponseEntity<String> response =
+                                                    httpClient.makePOSTRequest(NobotUtils.VILLAGE_URL, "GET", null, token);
+                                            JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+                                            Document doc =
+                                                    Jsoup.parse(obj.getJSONObject(NobotUtils.VILLAGE_URL).getString("body"));
+                                            account.setNp(getIntValueById(doc, "lottery_point"));
+                                            accountRepository.save(account);
+                                            total.addAndGet(account.getNp());
+                                        })))
+                .toArray(CompletableFuture[]::new))
+        .join();
+    return total.get();
+  }
+
+  public Map<String, String> getJi() {
+    Map<String, String> map = new HashMap<>();
+    CompletableFuture.allOf(
+            accountRepository.findAll().stream()
+                .map(
+                    account ->
+                        CompletableFuture.runAsync(
+                            () ->
+                                cacheService
+                                    .getToken(account.getLogin())
+                                    .ifPresent(
+                                        token -> {
+                                          List<CardInfo> reserveCards =
+                                              getReserveCards(account.getLogin());
+                                          reserveCards.forEach(
+                                              card -> {
+                                                if (card.getRarityCode() == 4) {
+                                                  String list = map.get(card.getName());
+                                                  if (list == null) {
+                                                    list = "";
+                                                  }
+                                                  list += ", " + account.getLogin();
+                                                  map.put(card.getName(), list);
+                                                }
+                                              });
+                                        })))
+                .toArray(CompletableFuture[]::new))
+        .join();
+    return map;
+  }
+
   private void getCardDetail(String token, CardInfo cardInfo) {
     ResponseEntity<String> response =
-        httpClient.makePOSTRequest(NobotUtils.CARD_DETAIL_URL, "POST", "cardid=" + cardInfo.getId(), token);
+        httpClient.makePOSTRequest(
+            NobotUtils.CARD_DETAIL_URL, "POST", "cardid=" + cardInfo.getId(), token);
     JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
     Document doc = Jsoup.parse(obj.getJSONObject(NobotUtils.CARD_DETAIL_URL).getString("body"));
-    cardInfo.setRefineTotal(doc.selectFirst(".card-refine-total").text());
+    Element rarity = doc.selectFirst(".card-rarity");
+    cardInfo.setRarityCode(rarity != null ? NobotUtils.getRarityCode(rarity.attr("src")) : 1);
+    cardInfo.setRarity(NobotUtils.getRarity(cardInfo.getRarityCode()));
+    if (doc.selectFirst(".card-refine-total") != null) {
+      cardInfo.setRefineTotal(doc.selectFirst(".card-refine-total").text());
+    } else if (doc.selectFirst(".card-refine-total-left") != null) {
+      cardInfo.setRefineTotal(doc.selectFirst(".card-refine-total-left").text());
+    }
     cardInfo.setRefineAtk(doc.selectFirst(".card-refine-atk").text());
     cardInfo.setRefineDef(doc.selectFirst(".card-refine-def").text());
     cardInfo.setRefineSpd(doc.selectFirst(".card-refine-spd").text());
     cardInfo.setRefineVir(doc.selectFirst(".card-refine-vir").text());
     cardInfo.setRefineStg(doc.selectFirst(".card-refine-stg").text());
-    cardInfo.setSkill1(doc.selectFirst(".card-skill1").text() + doc.selectFirst(".card-skill-lv1").text());
-    cardInfo.setSkill2(doc.selectFirst(".card-skill2").text() + doc.selectFirst(".card-skill-lv2").text());
-    cardInfo.setSkill3(doc.selectFirst(".card-skill3").text() + doc.selectFirst(".card-skill-lv3").text());
+    cardInfo.setSkill1(
+        doc.selectFirst(".card-skill1").text() + doc.selectFirst(".card-skill-lv1").text());
+    cardInfo.setSkill2(
+        doc.selectFirst(".card-skill2").text() + doc.selectFirst(".card-skill-lv2").text());
+    cardInfo.setSkill3(
+        doc.selectFirst(".card-skill3").text() + doc.selectFirst(".card-skill-lv3").text());
   }
 
   private void drawFuji(String login, int type, Integer times) {
