@@ -53,7 +53,15 @@ public class NobotUtils {
   public static final String FUKUBIKU_RESULT_URL =
       "http://210.140.157.168/nyaomikuji/fukubiki_result.htm";
 
-  public static final String CARD_DETAIL_URL = "http://210.140.157.168/card/sub/get_card_detail.htm";
+  public static final String CARD_DETAIL_URL =
+      "http://210.140.157.168/card/sub/get_card_detail.htm";
+
+  public static final String TRADE_SELL_URL = "http://210.140.157.168/card/trade_sell.htm";
+
+  public static final String COMEBACK_LIST_URL =
+      "http://210.140.157.168/user/comeback_recommend_list.htm";
+
+  public static final String COMEBACK_URL = "http://210.140.157.168/user/comeback.json";
 
   /**
    * Get card rarity code from image url

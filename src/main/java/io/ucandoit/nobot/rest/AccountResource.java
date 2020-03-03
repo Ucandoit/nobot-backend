@@ -132,9 +132,9 @@ public class AccountResource {
   }
 
   @RequestMapping(
-          value = "/updateNp",
-          method = RequestMethod.GET,
-          produces = "application/json; charset=UTF-8")
+      value = "/updateNp",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
   public ResponseEntity<Integer> getNp() {
     return new ResponseEntity<>(accountService.updateNp(), HttpStatus.OK);
   }
@@ -145,5 +145,14 @@ public class AccountResource {
       produces = "application/json; charset=UTF-8")
   public ResponseEntity<List<CardInfo>> reserveCards(@PathVariable String login) {
     return new ResponseEntity<>(accountService.getReserveCards(login), HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/comeback",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> comback() {
+    accountService.comeback();
+    return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }

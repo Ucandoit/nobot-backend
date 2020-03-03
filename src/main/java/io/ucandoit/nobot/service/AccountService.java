@@ -421,7 +421,7 @@ public class AccountService {
   }
 
   public int updateNp() {
-      AtomicInteger total = new AtomicInteger();
+    AtomicInteger total = new AtomicInteger();
     CompletableFuture.allOf(
             accountRepository.findAll().stream()
                 .map(
@@ -432,14 +432,18 @@ public class AccountService {
                                     .getToken(account.getLogin())
                                     .ifPresent(
                                         token -> {
-                                            ResponseEntity<String> response =
-                                                    httpClient.makePOSTRequest(NobotUtils.VILLAGE_URL, "GET", null, token);
-                                            JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
-                                            Document doc =
-                                                    Jsoup.parse(obj.getJSONObject(NobotUtils.VILLAGE_URL).getString("body"));
-                                            account.setNp(getIntValueById(doc, "lottery_point"));
-                                            accountRepository.save(account);
-                                            total.addAndGet(account.getNp());
+                                          ResponseEntity<String> response =
+                                              httpClient.makePOSTRequest(
+                                                  NobotUtils.VILLAGE_URL, "GET", null, token);
+                                          JSONObject obj =
+                                              HttpUtils.responseToJsonObject(response.getBody());
+                                          Document doc =
+                                              Jsoup.parse(
+                                                  obj.getJSONObject(NobotUtils.VILLAGE_URL)
+                                                      .getString("body"));
+                                          account.setNp(getIntValueById(doc, "lottery_point"));
+                                          accountRepository.save(account);
+                                          total.addAndGet(account.getNp());
                                         })))
                 .toArray(CompletableFuture[]::new))
         .join();
@@ -462,7 +466,8 @@ public class AccountService {
                                               getReserveCards(account.getLogin());
                                           reserveCards.forEach(
                                               card -> {
-                                                if (card.getRarityCode() == 4) {
+                                                if (card.getRarityCode() == 4
+                                                    && card.isTradable()) {
                                                   String list = map.get(card.getName());
                                                   if (list == null) {
                                                     list = "";
@@ -475,6 +480,54 @@ public class AccountService {
                 .toArray(CompletableFuture[]::new))
         .join();
     return map;
+  }
+
+  public void comeback() {
+    accountRepository
+        .findAll()
+        .forEach(
+            account -> {
+              cacheService
+                  .getToken(account.getLogin())
+                  .ifPresent(
+                      token -> {
+                        int times = 0;
+                        while (times < 3) {
+                          httpClient.makePOSTRequest(NobotUtils.PROFILE_URL, "GET", null, token);
+                          ResponseEntity<String> response =
+                              httpClient.makePOSTRequest(
+                                  NobotUtils.COMEBACK_LIST_URL, "GET", null, token);
+                          JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+                          Document doc =
+                              Jsoup.parse(
+                                  obj.getJSONObject(NobotUtils.COMEBACK_LIST_URL)
+                                      .getString("body"));
+                          Elements comebacks = doc.select(".comeback");
+                          int i = 0;
+                          while (times < 3 && i < comebacks.size()) {
+                            if (canComeback(
+                                NobotUtils.BASE_URL + comebacks.get(i).attr("href"), token)) {
+                              log.info("Call comeback for {}", account.getLogin());
+                              times++;
+                            }
+                            i++;
+                          }
+                        }
+                      });
+            });
+  }
+
+  private boolean canComeback(String url, String token) {
+    ResponseEntity<String> response = httpClient.makePOSTRequest(url, "GET", null, token);
+    JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+    Document doc = Jsoup.parse(obj.getJSONObject(url).getString("body"));
+    if (doc.selectFirst("img[alt=送信する]").attr("name").equals("")) {
+      return false;
+    } else {
+      String target = url.split("=")[1];
+      httpClient.makePOSTRequest(NobotUtils.COMEBACK_URL, "POST", "target=" + target, token);
+      return true;
+    }
   }
 
   private void getCardDetail(String token, CardInfo cardInfo) {
