@@ -1,8 +1,12 @@
 package io.ucandoit.nobot.util;
 
+import lombok.extern.slf4j.Slf4j;
+import org.jsoup.nodes.Element;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public class NobotUtils {
 
   public static final String BASE_URL = "http://210.140.157.168";
@@ -130,6 +134,23 @@ public class NobotUtils {
         return "新春福引";
       default:
         return "Unknown";
+    }
+  }
+
+  /**
+   * Get a node's integer value by id
+   *
+   * @param element root element
+   * @param id id of the node
+   * @return the value (-1 if node does not exist)
+   */
+  public static int getIntValueById(Element element, String id) {
+    Element node = element.selectFirst("#" + id);
+    if (node != null) {
+      return Integer.parseInt(node.text());
+    } else {
+      log.error("Element with id {} doesn't exist.", id);
+      return -1;
     }
   }
 }

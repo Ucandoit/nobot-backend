@@ -36,4 +36,6 @@ public class AccountInfo {
   private int maxWater;
 
   private int maxSky;
+
+  private boolean newUser;
 }
