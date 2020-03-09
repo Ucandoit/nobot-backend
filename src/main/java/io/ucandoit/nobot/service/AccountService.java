@@ -483,38 +483,42 @@ public class AccountService {
   }
 
   public void comeback() {
-    accountRepository
-        .findAll()
-        .forEach(
-            account -> {
-              cacheService
-                  .getToken(account.getLogin())
-                  .ifPresent(
-                      token -> {
-                        int times = 0;
-                        while (times < 3) {
-                          httpClient.makePOSTRequest(NobotUtils.PROFILE_URL, "GET", null, token);
-                          ResponseEntity<String> response =
-                              httpClient.makePOSTRequest(
-                                  NobotUtils.COMEBACK_LIST_URL, "GET", null, token);
-                          JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
-                          Document doc =
-                              Jsoup.parse(
-                                  obj.getJSONObject(NobotUtils.COMEBACK_LIST_URL)
-                                      .getString("body"));
-                          Elements comebacks = doc.select(".comeback");
-                          int i = 0;
-                          while (times < 3 && i < comebacks.size()) {
-                            if (canComeback(
-                                NobotUtils.BASE_URL + comebacks.get(i).attr("href"), token)) {
-                              log.info("Call comeback for {}", account.getLogin());
-                              times++;
-                            }
-                            i++;
-                          }
-                        }
-                      });
-            });
+    CompletableFuture.runAsync(
+        () -> {
+          accountRepository
+              .findAll()
+              .forEach(
+                  account -> {
+                    cacheService
+                        .getToken(account.getLogin())
+                        .ifPresent(
+                            token -> {
+                              int times = 0;
+                              while (times < 3) {
+                                httpClient.makePOSTRequest(
+                                    NobotUtils.PROFILE_URL, "GET", null, token);
+                                ResponseEntity<String> response =
+                                    httpClient.makePOSTRequest(
+                                        NobotUtils.COMEBACK_LIST_URL, "GET", null, token);
+                                JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+                                Document doc =
+                                    Jsoup.parse(
+                                        obj.getJSONObject(NobotUtils.COMEBACK_LIST_URL)
+                                            .getString("body"));
+                                Elements comebacks = doc.select(".comeback");
+                                int i = 0;
+                                while (times < 3 && i < comebacks.size()) {
+                                  if (canComeback(
+                                      NobotUtils.BASE_URL + comebacks.get(i).attr("href"), token)) {
+                                    log.info("Call comeback for {}", account.getLogin());
+                                    times++;
+                                  }
+                                  i++;
+                                }
+                              }
+                            });
+                  });
+        });
   }
 
   private boolean canComeback(String url, String token) {
