@@ -52,7 +52,6 @@ public class BuildTask implements Runnable {
         getMapInfo();
         checkBuild();
       }
-
     } catch (Exception e) {
       log.error("Tutorial task: error for " + login + " : ", e);
       if ("Stop".equals(e.getMessage())) {
@@ -247,6 +246,8 @@ public class BuildTask implements Runnable {
     }
     log.info("Build task: Waiting for build to complete in {} seconds for {}", waitSeconds, login);
     Thread.sleep(waitSeconds * 1000);
+    // update token after wait because it takes time
+    cacheService.getToken(login).ifPresent(s -> token = s);
   }
 
   private boolean checkFinish() throws RuntimeException {
