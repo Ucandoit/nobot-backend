@@ -8,6 +8,6 @@ import lombok.ToString;
 @ToString
 @AllArgsConstructor
 public class Position {
-    private int x;
-    private int y;
+  private int x;
+  private int y;
 }

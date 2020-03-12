@@ -20,4 +20,8 @@ public class MapArea {
   private int x;
 
   private int y;
+
+  private boolean constructing;
+
+  private boolean running;
 }

@@ -2,6 +2,8 @@ package io.ucandoit.nobot.service;
 
 import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.dto.CardInfo;
+import io.ucandoit.nobot.dto.MapArea;
+import io.ucandoit.nobot.dto.Position;
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
 import io.ucandoit.nobot.model.DrawHistory;
@@ -19,6 +21,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,7 +38,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class AccountService {
+public class AccountService implements InitializingBean {
 
   @Value("${scheduler.account.enable:true}")
   private boolean enable;
@@ -51,6 +54,33 @@ public class AccountService {
   @Resource private DrawHistoryRepository drawHistoryRepository;
 
   @Resource private DrawStatusRepository drawStatusRepository;
+
+  private Map<String, Position> mapMap;
+
+  @Override
+  public void afterPropertiesSet() {
+    mapMap = new HashMap<>();
+    mapMap.put("map00", new Position(0, 0));
+    mapMap.put("map01", new Position(1, 0));
+    mapMap.put("map02", new Position(2, 0));
+    mapMap.put("map05", new Position(0, 1));
+    mapMap.put("map06", new Position(1, 1));
+    mapMap.put("map07", new Position(2, 1));
+    mapMap.put("map08", new Position(3, 1));
+    mapMap.put("map10", new Position(0, 2));
+    mapMap.put("map11", new Position(1, 2));
+    mapMap.put("map12", new Position(2, 2));
+    mapMap.put("map13", new Position(3, 2));
+    mapMap.put("map14", new Position(4, 2));
+    mapMap.put("map16", new Position(1, 3));
+    mapMap.put("map17", new Position(2, 3));
+    mapMap.put("map18", new Position(3, 3));
+    mapMap.put("map19", new Position(4, 3));
+    mapMap.put("map20", new Position(0, 4));
+    mapMap.put("map22", new Position(2, 4));
+    mapMap.put("map23", new Position(3, 4));
+    mapMap.put("map24", new Position(4, 4));
+  }
 
   public List<AccountInfo> getAccountsGeneralInfo()
       throws ExecutionException, InterruptedException {
@@ -113,6 +143,74 @@ public class AccountService {
                         .sorted(Comparator.comparing(AccountInfo::getLogin))
                         .collect(Collectors.toList()));
     return allCompletableFuture.get();
+  }
+
+  public AccountInfo getAccountInfo(String login) {
+    AccountInfo accountInfo = new AccountInfo();
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              ResponseEntity<String> response =
+                  httpClient.makePOSTRequest(NobotUtils.VILLAGE_URL, "GET", null, token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc =
+                  Jsoup.parse(obj.getJSONObject(NobotUtils.VILLAGE_URL).getString("body"));
+              accountInfo.setNp(getIntValueById(doc, "lottery_point"));
+              accountInfo.setFood(getIntValueById(doc, "element_food"));
+              accountInfo.setMaxFood(getIntValueById(doc, "max_food"));
+              accountInfo.setFire(getIntValueById(doc, "element_fire"));
+              accountInfo.setEarth(getIntValueById(doc, "element_earth"));
+              accountInfo.setWind(getIntValueById(doc, "element_wind"));
+              accountInfo.setWater(getIntValueById(doc, "element_water"));
+              accountInfo.setSky(getIntValueById(doc, "element_sky"));
+              accountInfo.setMaxFire(getIntValueById(doc, "max_fire"));
+              accountInfo.setMaxEarth(getIntValueById(doc, "max_earth"));
+              accountInfo.setMaxWind(getIntValueById(doc, "max_wind"));
+              accountInfo.setMaxWater(getIntValueById(doc, "max_water"));
+              accountInfo.setMaxSky(getIntValueById(doc, "max_sky"));
+              if (doc.selectFirst("#newuserbutton") != null) {
+                accountInfo.setNewUser(true);
+              } else {
+                accountInfo.setNewUser(false);
+              }
+              accountInfo.setAreas(getMapInfo(doc));
+            });
+    return accountInfo;
+  }
+
+  public List<MapArea> getMapInfo(Document doc) {
+    List<MapArea> areas = new ArrayList<>();
+    Elements buildings = doc.selectFirst("#mapbg").children();
+    for (Element building : buildings) {
+      String[] classNames = building.className().split(" ");
+      if (classNames.length > 1) {
+        String mapId = classNames[0];
+        String type = classNames[1];
+        if (mapMap.containsKey(mapId)) {
+          String title = building.attr("title");
+          int level = 0;
+          if (title.split(" ").length > 1) {
+            level = Integer.parseInt(title.split(" ")[1].replace("Lv.", ""));
+            title = title.split(" ")[0];
+          }
+          boolean constructing =
+              doc.selectFirst("#buildingimg ." + mapId + ".constructing") != null;
+          boolean running = doc.selectFirst("#buildingimg ." + mapId + ".running") != null;
+          areas.add(
+              new MapArea(
+                  mapId,
+                  type,
+                  title,
+                  level,
+                  mapMap.get(mapId).getX(),
+                  mapMap.get(mapId).getY(),
+                  constructing,
+                  running));
+        }
+      }
+    }
+    return areas;
   }
 
   public void trade(String login) {
@@ -517,6 +615,26 @@ public class AccountService {
                                 }
                               }
                             });
+                  });
+        });
+  }
+
+  public void celebrate9() {
+    CompletableFuture.runAsync(
+        () -> {
+          accountRepository
+              .findAll()
+              .forEach(
+                  account -> {
+                    cacheService
+                        .getToken(account.getLogin())
+                        .ifPresent(
+                            token ->
+                                httpClient.makePOSTRequest(
+                                    NobotUtils.SERIAL_INPUT,
+                                    "POST",
+                                    "serialCode=%E7%A5%9D9%E5%91%A8%E5%B9%B4",
+                                    token));
                   });
         });
   }

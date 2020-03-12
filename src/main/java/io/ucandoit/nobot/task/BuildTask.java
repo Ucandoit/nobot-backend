@@ -1,8 +1,12 @@
 package io.ucandoit.nobot.task;
 
-import io.ucandoit.nobot.dto.*;
+import io.ucandoit.nobot.dto.AccountInfo;
+import io.ucandoit.nobot.dto.BuildCost;
+import io.ucandoit.nobot.dto.BuildTarget;
+import io.ucandoit.nobot.dto.MapArea;
 import io.ucandoit.nobot.enums.Building;
 import io.ucandoit.nobot.http.HttpClient;
+import io.ucandoit.nobot.service.AccountService;
 import io.ucandoit.nobot.service.CacheService;
 import io.ucandoit.nobot.util.HttpUtils;
 import io.ucandoit.nobot.util.NobotUtils;
@@ -11,14 +15,11 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,8 @@ public class BuildTask implements Runnable {
 
   @Resource private CacheService cacheService;
 
+  @Resource private AccountService accountService;
+
   @Resource private HttpClient httpClient;
 
   @Resource private Map<Building, Map<Integer, BuildCost>> buildCostMap;
@@ -36,8 +39,6 @@ public class BuildTask implements Runnable {
   private String login;
 
   private String token;
-
-  private Map<String, Position> mapMap;
 
   private List<MapArea> areas;
 
@@ -48,7 +49,6 @@ public class BuildTask implements Runnable {
     try {
       cacheService.getToken(login).ifPresent(s -> token = s);
       if (token != null) {
-        init();
         getMapInfo();
         checkBuild();
       }
@@ -64,55 +64,12 @@ public class BuildTask implements Runnable {
     }
   }
 
-  private void init() {
-    mapMap = new HashMap<>();
-    mapMap.put("map00", new Position(0, 0));
-    mapMap.put("map01", new Position(1, 0));
-    mapMap.put("map02", new Position(2, 0));
-    mapMap.put("map05", new Position(0, 1));
-    mapMap.put("map06", new Position(1, 1));
-    mapMap.put("map07", new Position(2, 1));
-    mapMap.put("map08", new Position(3, 1));
-    mapMap.put("map10", new Position(0, 2));
-    mapMap.put("map11", new Position(1, 2));
-    mapMap.put("map12", new Position(2, 2));
-    mapMap.put("map13", new Position(3, 2));
-    mapMap.put("map14", new Position(4, 2));
-    mapMap.put("map16", new Position(1, 3));
-    mapMap.put("map17", new Position(2, 3));
-    mapMap.put("map18", new Position(3, 3));
-    mapMap.put("map19", new Position(4, 3));
-    mapMap.put("map20", new Position(0, 4));
-    mapMap.put("map22", new Position(2, 4));
-    mapMap.put("map23", new Position(3, 4));
-    mapMap.put("map24", new Position(4, 4));
-  }
-
   private void getMapInfo() {
     ResponseEntity<String> response =
         httpClient.makePOSTRequest(NobotUtils.VILLAGE_URL, "GET", null, token);
     JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
     Document doc = Jsoup.parse(obj.getJSONObject(NobotUtils.VILLAGE_URL).getString("body"));
-    Elements buildings = doc.selectFirst("#mapbg").children();
-    areas = new ArrayList<>();
-    for (Element building : buildings) {
-      String[] classNames = building.className().split(" ");
-      if (classNames.length > 1) {
-        String mapId = classNames[0];
-        String type = classNames[1];
-        if (mapMap.containsKey(mapId)) {
-          String title = building.attr("title");
-          int level = 0;
-          if (title.split(" ").length > 1) {
-            level = Integer.parseInt(title.split(" ")[1].replace("Lv.", ""));
-            title = title.split(" ")[0];
-          }
-          areas.add(
-              new MapArea(
-                  mapId, type, title, level, mapMap.get(mapId).getX(), mapMap.get(mapId).getY()));
-        }
-      }
-    }
+    areas = accountService.getMapInfo(doc);
     currentInfo.setNp(NobotUtils.getIntValueById(doc, "lottery_point"));
     currentInfo.setFood(NobotUtils.getIntValueById(doc, "element_food"));
     currentInfo.setFire(NobotUtils.getIntValueById(doc, "element_fire"));
@@ -284,7 +241,10 @@ public class BuildTask implements Runnable {
     MapArea ret = null;
     int level = 9;
     for (MapArea area : areas) {
-      if (area.getBuildingType().equals(type) && area.getLevel() < 9 && area.getLevel() < level) {
+      if (area.getBuildingType().equals(type)
+          && area.getLevel() < 9
+          && area.getLevel() < level
+          && !area.isConstructing()) {
         ret = area;
         level = area.getLevel();
       }

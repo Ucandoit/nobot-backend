@@ -3,6 +3,8 @@ package io.ucandoit.nobot.dto;
 import lombok.Data;
 import lombok.ToString;
 
+import java.util.List;
+
 @Data
 @ToString
 public class AccountInfo {
@@ -38,4 +40,6 @@ public class AccountInfo {
   private int maxSky;
 
   private boolean newUser;
+
+  private List<MapArea> areas;
 }

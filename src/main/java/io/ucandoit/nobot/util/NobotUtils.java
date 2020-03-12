@@ -67,6 +67,8 @@ public class NobotUtils {
 
   public static final String COMEBACK_URL = "http://210.140.157.168/user/comeback.json";
 
+  public static final String SERIAL_INPUT = "http://210.140.157.168/user/serial_input.htm";
+
   /**
    * Get card rarity code from image url
    *

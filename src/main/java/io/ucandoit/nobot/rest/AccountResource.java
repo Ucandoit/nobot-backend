@@ -29,6 +29,14 @@ public class AccountResource {
   }
 
   @RequestMapping(
+      value = "/info/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<AccountInfo> accountInfo(@PathVariable String login) {
+    return new ResponseEntity<>(accountService.getAccountInfo(login), HttpStatus.OK);
+  }
+
+  @RequestMapping(
       value = "/trade/{login}",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
@@ -153,6 +161,15 @@ public class AccountResource {
       produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> comback() {
     accountService.comeback();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/celebrate9",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> celebrate9() {
+    accountService.celebrate9();
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }

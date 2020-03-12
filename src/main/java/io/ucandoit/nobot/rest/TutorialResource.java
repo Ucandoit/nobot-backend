@@ -26,18 +26,18 @@ public class TutorialResource {
   }
 
   @RequestMapping(
-          value = "/build/{login}",
-          method = RequestMethod.GET,
-          produces = "application/json; charset=UTF-8")
+      value = "/build/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> build(@PathVariable String login) {
     tutorialService.startBuild(login);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 
   @RequestMapping(
-          value = "/stopBuild/{login}",
-          method = RequestMethod.GET,
-          produces = "application/json; charset=UTF-8")
+      value = "/stopBuild/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> stopBuild(@PathVariable String login) {
     tutorialService.stopBuild(login);
     return new ResponseEntity<>(true, HttpStatus.OK);
