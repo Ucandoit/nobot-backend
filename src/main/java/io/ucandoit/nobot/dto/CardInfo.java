@@ -9,8 +9,10 @@ public class CardInfo {
 
   private String id;
   private String name;
+  private String realName;
   private int rarityCode;
   private String rarity;
+  private String property;
   private boolean tradable;
   private String imgUrl;
   private String refineTotal;

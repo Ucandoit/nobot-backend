@@ -111,6 +111,8 @@ public class NobotUtils {
         return "稀";
       case 4:
         return "極";
+      case 5:
+        return "宝";
       case 7:
         return "煌";
       case 6:
@@ -153,6 +155,36 @@ public class NobotUtils {
     } else {
       log.error("Element with id {} doesn't exist.", id);
       return -1;
+    }
+  }
+
+  /**
+   * Get card property from img
+   *
+   * @param img url of img
+   * @return card property
+   */
+  public static String getProperty(String img) {
+    log.info(img);
+    Pattern pattern = Pattern.compile("(.+/elements_0)(.?)(..+)");
+    Matcher matcher = pattern.matcher(img);
+    int code = -1;
+    if (matcher.find()) {
+      code = Integer.parseInt(matcher.group(2));
+    }
+    switch (code) {
+      case 0:
+        return "火";
+      case 1:
+        return "地";
+      case 2:
+        return "風";
+      case 3:
+        return "水";
+      case 4:
+        return "空";
+      default:
+        return "Unknown";
     }
   }
 }
