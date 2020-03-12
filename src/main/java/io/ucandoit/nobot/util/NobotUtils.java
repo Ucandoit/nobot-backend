@@ -1,5 +1,6 @@
 package io.ucandoit.nobot.util;
 
+import io.ucandoit.nobot.enums.Military;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Element;
 
@@ -165,7 +166,6 @@ public class NobotUtils {
    * @return card property
    */
   public static String getProperty(String img) {
-    log.info(img);
     Pattern pattern = Pattern.compile("(.+/elements_0)(.?)(..+)");
     Matcher matcher = pattern.matcher(img);
     int code = -1;
@@ -186,5 +186,16 @@ public class NobotUtils {
       default:
         return "Unknown";
     }
+  }
+
+  public static Military getMilitary(String img) {
+    if (img.contains("mounted")) {
+      return Military.Mounted;
+    } else if (img.contains("soldier")) {
+      return Military.Soldier;
+    } else if (img.contains("gunner")) {
+      return Military.Gunner;
+    }
+    return Military.Unknown;
   }
 }

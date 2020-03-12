@@ -42,4 +42,8 @@ public class AccountInfo {
   private boolean newUser;
 
   private List<MapArea> areas;
+
+  private List<CardInfo> deckCards;
+
+  private List<CardInfo> reserveCards;
 }

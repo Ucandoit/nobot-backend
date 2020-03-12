@@ -175,6 +175,8 @@ public class AccountService implements InitializingBean {
                 accountInfo.setNewUser(false);
               }
               accountInfo.setAreas(getMapInfo(doc));
+              accountInfo.setDeckCards(getCardInfos(doc.select(".deck-rect")));
+              accountInfo.setReserveCards(getCardInfos(doc.select(".reserve-rect")));
             });
     return accountInfo;
   }
@@ -211,6 +213,23 @@ public class AccountService implements InitializingBean {
       }
     }
     return areas;
+  }
+
+  public List<CardInfo> getCardInfos(Elements cards) {
+    return cards.stream()
+        .map(
+            card -> {
+              Element img = card.selectFirst(".card-face");
+              CardInfo cardInfo = new CardInfo();
+              cardInfo.setId(img.className().split(" ")[0].replace("face-card-id", ""));
+              cardInfo.setName(img.attr("title"));
+              cardInfo.setTradable(!img.hasClass("protected") && !img.hasClass("trade-limit"));
+              cardInfo.setImgUrl(img.attr("src"));
+              cardInfo.setMilitary(
+                  NobotUtils.getMilitary(card.selectFirst(".militery").attr("src")));
+              return cardInfo;
+            })
+        .collect(Collectors.toList());
   }
 
   public void trade(String login) {

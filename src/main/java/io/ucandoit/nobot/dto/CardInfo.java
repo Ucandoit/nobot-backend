@@ -1,5 +1,6 @@
 package io.ucandoit.nobot.dto;
 
+import io.ucandoit.nobot.enums.Military;
 import lombok.Data;
 import lombok.ToString;
 
@@ -13,6 +14,7 @@ public class CardInfo {
   private int rarityCode;
   private String rarity;
   private String property;
+  private Military military;
   private boolean tradable;
   private String imgUrl;
   private String refineTotal;
