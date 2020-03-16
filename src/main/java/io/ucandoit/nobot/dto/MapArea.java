@@ -1,5 +1,6 @@
 package io.ucandoit.nobot.dto;
 
+import io.ucandoit.nobot.enums.Building;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.ToString;
@@ -11,7 +12,7 @@ public class MapArea {
 
   private String mapId;
 
-  private String buildingType;
+  private Building building;
 
   private String title;
 
@@ -24,4 +25,8 @@ public class MapArea {
   private boolean constructing;
 
   private boolean running;
+
+  public String getPosition() {
+    return "x=" + x + "&y=" + y;
+  }
 }

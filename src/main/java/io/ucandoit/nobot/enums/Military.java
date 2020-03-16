@@ -11,9 +11,9 @@ public enum Military {
   Gunner("鉄砲"),
   Unknown("Unknown");
 
+  private String title;
+
   Military(String title) {
     this.title = title;
   }
-
-  private String title;
 }

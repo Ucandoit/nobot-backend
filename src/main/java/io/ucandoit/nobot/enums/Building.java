@@ -14,7 +14,9 @@ public enum Building {
   SKY("type07", "修練場【空】", "sky"),
   DEV_BASIC("type09", "奥義開発所", "dev_basic"),
   MARKET("type13", "楽市楽座", "market"),
-  HOME_BASIC("type01", "館", "home_basic");
+  HOME_BASIC("type01", "館", "home_basic"),
+  FREE("type00", "空き地", "free"),
+  ;
 
   private String type;
 
@@ -26,5 +28,14 @@ public enum Building {
     this.type = type;
     this.title = title;
     this.facility = facility;
+  }
+
+  public static Building fromType(String type) {
+    for (Building building : values()) {
+      if (building.getType().equals(type)) {
+        return building;
+      }
+    }
+    return null;
   }
 }

@@ -1,5 +1,7 @@
 package io.ucandoit.nobot.util;
 
+import io.ucandoit.nobot.dto.AccountInfo;
+import io.ucandoit.nobot.dto.ResourceCost;
 import io.ucandoit.nobot.enums.Military;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Element;
@@ -197,5 +199,13 @@ public class NobotUtils {
       return Military.Gunner;
     }
     return Military.Unknown;
+  }
+
+  public static boolean costEnough(ResourceCost buildCost, AccountInfo accountInfo) {
+    return buildCost.getFire() <= accountInfo.getFire()
+        && buildCost.getEarth() <= accountInfo.getEarth()
+        && buildCost.getWind() <= accountInfo.getWind()
+        && buildCost.getWater() <= accountInfo.getWater()
+        && buildCost.getSky() <= accountInfo.getSky();
   }
 }

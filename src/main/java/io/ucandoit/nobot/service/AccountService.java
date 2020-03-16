@@ -4,6 +4,7 @@ import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.dto.CardInfo;
 import io.ucandoit.nobot.dto.MapArea;
 import io.ucandoit.nobot.dto.Position;
+import io.ucandoit.nobot.enums.Building;
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
 import io.ucandoit.nobot.model.DrawHistory;
@@ -202,7 +203,7 @@ public class AccountService implements InitializingBean {
           areas.add(
               new MapArea(
                   mapId,
-                  type,
+                  Building.fromType(type),
                   title,
                   level,
                   mapMap.get(mapId).getX(),

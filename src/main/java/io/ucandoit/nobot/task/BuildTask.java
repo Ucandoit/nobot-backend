@@ -1,9 +1,9 @@
 package io.ucandoit.nobot.task;
 
 import io.ucandoit.nobot.dto.AccountInfo;
-import io.ucandoit.nobot.dto.BuildCost;
 import io.ucandoit.nobot.dto.BuildTarget;
 import io.ucandoit.nobot.dto.MapArea;
+import io.ucandoit.nobot.dto.ResourceCost;
 import io.ucandoit.nobot.enums.Building;
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.service.AccountService;
@@ -34,7 +34,7 @@ public class BuildTask implements Runnable {
 
   @Resource private HttpClient httpClient;
 
-  @Resource private Map<Building, Map<Integer, BuildCost>> buildCostMap;
+  @Resource private Map<Building, Map<Integer, ResourceCost>> buildCostMap;
 
   private String login;
 
@@ -162,19 +162,19 @@ public class BuildTask implements Runnable {
   }
 
   private BuildTarget getBuildTarget(Building building, int max) {
-    if (countBuildings(building.getType()) < max) {
+    if (countBuildings(building) < max) {
       MapArea area = getEmptyArea();
-      BuildCost buildCost = buildCostMap.get(building).get(area.getLevel());
-      if (costEnough(buildCost)) {
+      ResourceCost buildCost = buildCostMap.get(building).get(area.getLevel());
+      if (NobotUtils.costEnough(buildCost, currentInfo)) {
         return new BuildTarget(building, false, area.getX(), area.getY(), buildCost.getSeconds());
       } else {
         log.info("Build task: Short of food to build {} for {}", building.getTitle(), login);
       }
     } else {
-      MapArea area = getLowestArea(building.getType());
+      MapArea area = getLowestArea(building);
       if (area != null) {
-        BuildCost buildCost = buildCostMap.get(building).get(area.getLevel());
-        if (costEnough(buildCost)) {
+        ResourceCost buildCost = buildCostMap.get(building).get(area.getLevel());
+        if (NobotUtils.costEnough(buildCost, currentInfo)) {
           return new BuildTarget(building, true, area.getX(), area.getY(), buildCost.getSeconds());
         } else {
           log.info("Build task: Short of food to extend {} for {}", building.getTitle(), login);
@@ -217,10 +217,10 @@ public class BuildTask implements Runnable {
     return !doing.toString().contains("建設中") && !doing.toString().contains("増築中");
   }
 
-  private int countBuildings(String type) {
+  private int countBuildings(Building building) {
     int count = 0;
     for (MapArea area : areas) {
-      if (area.getBuildingType().equals(type)) {
+      if (area.getBuilding().equals(building)) {
         count++;
       }
     }
@@ -229,7 +229,7 @@ public class BuildTask implements Runnable {
 
   private MapArea getEmptyArea() {
     for (MapArea area : areas) {
-      if (area.getBuildingType().equals("type00")) {
+      if (area.getBuilding().equals(Building.FREE)) {
         return area;
       }
     }
@@ -237,11 +237,11 @@ public class BuildTask implements Runnable {
     throw new RuntimeException("Stop");
   }
 
-  private MapArea getLowestArea(String type) {
+  private MapArea getLowestArea(Building building) {
     MapArea ret = null;
     int level = 9;
     for (MapArea area : areas) {
-      if (area.getBuildingType().equals(type)
+      if (area.getBuilding().equals(building)
           && area.getLevel() < 9
           && area.getLevel() < level
           && !area.isConstructing()) {
@@ -250,14 +250,6 @@ public class BuildTask implements Runnable {
       }
     }
     return ret;
-  }
-
-  private boolean costEnough(BuildCost buildCost) {
-    return buildCost.getFire() <= currentInfo.getFire()
-        && buildCost.getEarth() <= currentInfo.getEarth()
-        && buildCost.getWind() <= currentInfo.getWind()
-        && buildCost.getWater() <= currentInfo.getWater()
-        && buildCost.getSky() <= currentInfo.getSky();
   }
 
   public void setLogin(String login) {
