@@ -44,7 +44,7 @@ public class TrainingTask implements Runnable {
 
   private int level;
 
-  private boolean once;
+  private int targetLevel;
 
   private String token;
 
@@ -81,7 +81,7 @@ public class TrainingTask implements Runnable {
         finish = checkFinish();
       }
 
-      if (level < 20) {
+      if (level < targetLevel) {
         ResponseEntity<String> response =
             httpClient.makePOSTRequest(NobotUtils.VILLAGE_URL, "GET", null, token);
         JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
@@ -125,24 +125,19 @@ public class TrainingTask implements Runnable {
                       + "&command="
                       + training.getCommand(),
                   token);
-              if (once) {
-                stop = true;
-                log.info("Training task: Finish training once for {} of {}", cardId, login);
-              } else {
-                int waitSeconds =
-                    currentInfo.isNewUser()
-                        ? trainingCost.getReducedSeconds()
-                        : trainingCost.getSeconds();
-                log.info(
-                    "Training task: Waiting for train to complete in {} seconds for {} of {}",
-                    waitSeconds,
-                    cardId,
-                    login);
-                Thread.sleep(waitSeconds * 1000);
-                level++;
-                // update token after wait because it takes time
-                cacheService.getToken(login).ifPresent(s -> token = s);
-              }
+              int waitSeconds =
+                  currentInfo.isNewUser()
+                      ? trainingCost.getReducedSeconds()
+                      : trainingCost.getSeconds();
+              log.info(
+                  "Training task: Waiting for train to complete in {} seconds for {} of {}",
+                  waitSeconds,
+                  cardId,
+                  login);
+              Thread.sleep(waitSeconds * 1000);
+              level++;
+              // update token after wait because it takes time
+              cacheService.getToken(login).ifPresent(s -> token = s);
             } else {
               stop = true;
               log.info(
@@ -196,7 +191,7 @@ public class TrainingTask implements Runnable {
     this.level = level;
   }
 
-  public void setOnce(boolean once) {
-    this.once = once;
+  public void setTargetLevel(int targetLevel) {
+    this.targetLevel = targetLevel;
   }
 }

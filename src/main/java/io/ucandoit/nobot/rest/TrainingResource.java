@@ -23,8 +23,8 @@ public class TrainingResource {
       @RequestParam String catId,
       @RequestParam Training training,
       @RequestParam int level,
-      Boolean once) {
-    trainingService.startTraining(login, catId, training, level, once != null && once);
+      @RequestParam int targetLevel) {
+    trainingService.startTraining(login, catId, training, level, targetLevel);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }

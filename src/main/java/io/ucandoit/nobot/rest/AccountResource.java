@@ -177,25 +177,25 @@ public class AccountResource {
   }
 
   @RequestMapping(
-          value = "/test/{login}",
-          method = RequestMethod.GET,
-          produces = "application/json; charset=UTF-8")
+      value = "/test/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
   public ResponseEntity<AccountInfo> test(@PathVariable String login) {
     return new ResponseEntity<>(cacheService.getAccountInfo(login), HttpStatus.OK);
   }
 
   @RequestMapping(
-          value = "/testUpdate/{login}",
-          method = RequestMethod.GET,
-          produces = "application/json; charset=UTF-8")
+      value = "/testUpdate/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
   public ResponseEntity<AccountInfo> testUpdate(@PathVariable String login) {
     return new ResponseEntity<>(cacheService.updateAccountInfo(login), HttpStatus.OK);
   }
 
   @RequestMapping(
-          value = "/testDelete/{login}",
-          method = RequestMethod.GET,
-          produces = "application/json; charset=UTF-8")
+      value = "/testDelete/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> testDelete(@PathVariable String login) {
     cacheService.evictAccountInfo(login);
     return new ResponseEntity<>(true, HttpStatus.OK);

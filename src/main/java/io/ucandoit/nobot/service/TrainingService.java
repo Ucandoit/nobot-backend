@@ -26,7 +26,7 @@ public class TrainingService {
   private Map<String, Future<?>> futureMap = new HashMap<>();
 
   public void startTraining(
-      String login, String cardId, Training training, int level, boolean once) {
+      String login, String cardId, Training training, int level, int targetLevel) {
     Future<?> future = futureMap.get(cardId);
     if (future != null && !future.isDone()) {
       future.cancel(true);
@@ -36,7 +36,7 @@ public class TrainingService {
     trainingTask.setCardId(cardId);
     trainingTask.setTraining(training);
     trainingTask.setLevel(level);
-    trainingTask.setOnce(once);
+    trainingTask.setTargetLevel(targetLevel);
     future = executorService.submit(trainingTask);
     futureMap.put(cardId, future);
   }

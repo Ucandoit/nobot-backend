@@ -34,7 +34,7 @@ public class CardService {
               JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
               Document doc =
                   Jsoup.parse(obj.getJSONObject(NobotUtils.CARD_DETAIL_URL).getString("body"));
-//                            log.info(doc.toString());
+              //                            log.info(doc.toString());
               cardInfo.setId(cardId);
               cardInfo.setName(doc.selectFirst(".card-name").text());
               cardInfo.setRealName(doc.selectFirst(".card-real-name").text());
