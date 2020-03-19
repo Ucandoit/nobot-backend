@@ -161,10 +161,14 @@ public class WarService {
     }
   }
 
-  public void setLine(String login, int line) {
-    WarConfig warConfig = warConfigRepository.getOne(login);
-    warConfig.setLine(line);
-    warConfigRepository.save(warConfig);
+  public void setLineForGroup(String group, int line) {
+    List<WarConfig> warConfigList = warConfigRepository.findByGroup(group);
+    if (warConfigList != null) {
+      for (WarConfig warConfig : warConfigList) {
+        warConfig.setLine(line);
+        warConfigRepository.save(warConfig);
+      }
+    }
   }
 
   public void setAllFP(boolean fp) {
@@ -175,16 +179,34 @@ public class WarService {
     }
   }
 
-  public void setFP(String login, boolean fp) {
-    WarConfig warConfig = warConfigRepository.getOne(login);
-    warConfig.setFp(fp);
-    warConfigRepository.save(warConfig);
+  public void setFPForGroup(String group, boolean fp) {
+    List<WarConfig> warConfigList = warConfigRepository.findByGroup(group);
+    if (warConfigList != null) {
+      for (WarConfig warConfig : warConfigList) {
+        warConfig.setFp(fp);
+        warConfigRepository.save(warConfig);
+      }
+    }
   }
 
-  public void setNPC(String login, boolean npc) {
-    WarConfig warConfig = warConfigRepository.getOne(login);
-    warConfig.setNpc(npc);
-    warConfigRepository.save(warConfig);
+  public void setNPCForGroup(String group, boolean npc) {
+    List<WarConfig> warConfigList = warConfigRepository.findByGroup(group);
+    if (warConfigList != null) {
+      for (WarConfig warConfig : warConfigList) {
+        warConfig.setNpc(npc);
+        warConfigRepository.save(warConfig);
+      }
+    }
+  }
+
+  public void setEnabledForGroup(String group, boolean enabled) {
+    List<WarConfig> warConfigList = warConfigRepository.findByGroup(group);
+    if (warConfigList != null) {
+      for (WarConfig warConfig : warConfigList) {
+        warConfig.setEnabled(enabled);
+        warConfigRepository.save(warConfig);
+      }
+    }
   }
 
   public List<WarConfig> getWarConfigList() {

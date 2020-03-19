@@ -80,29 +80,42 @@ public class WarResource {
   }
 
   @RequestMapping(
-      value = "/line/{login}/{line}",
+      value = "/line/{group}/{line}",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
-  public ResponseEntity<Boolean> setLine(@PathVariable String login, @PathVariable int line) {
-    warService.setLine(login, line);
+  public ResponseEntity<Boolean> setLineForGroup(
+      @PathVariable String group, @PathVariable int line) {
+    warService.setLineForGroup(group, line);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 
   @RequestMapping(
-      value = "/fp/{login}/{fp}",
+      value = "/fp/{group}/{fp}",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
-  public ResponseEntity<Boolean> setFP(@PathVariable String login, @PathVariable boolean fp) {
-    warService.setFP(login, fp);
+  public ResponseEntity<Boolean> setFPForGroup(
+      @PathVariable String group, @PathVariable boolean fp) {
+    warService.setFPForGroup(group, fp);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 
   @RequestMapping(
-      value = "/npc/{login}/{npc}",
+      value = "/npc/{group}/{npc}",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
-  public ResponseEntity<Boolean> setNPC(@PathVariable String login, @PathVariable boolean npc) {
-    warService.setNPC(login, npc);
+  public ResponseEntity<Boolean> setNPCForGroup(
+      @PathVariable String group, @PathVariable boolean npc) {
+    warService.setNPCForGroup(group, npc);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/enabled/{group}/{enabled}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> setEnabledForGroup(
+      @PathVariable String group, @PathVariable boolean enabled) {
+    warService.setEnabledForGroup(group, enabled);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 

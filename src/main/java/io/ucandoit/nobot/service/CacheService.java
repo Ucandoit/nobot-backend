@@ -1,5 +1,6 @@
 package io.ucandoit.nobot.service;
 
+import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.model.Account;
 import io.ucandoit.nobot.repository.AccountRepository;
@@ -49,4 +50,33 @@ public class CacheService {
 
   @CacheEvict(value = "tokens", key = "#login")
   public void evictToken(String login) {}
+
+  @Cacheable("accountInfo")
+  @Transactional
+  public AccountInfo getAccountInfo(String login) {
+    Account account = accountRepository.getOne(login);
+    if (account != null) {
+      if (account.getExpirationDate().after(new Date())) {
+        log.info("Retrieving account info for {}.", login);
+        AccountInfo accountInfo = new AccountInfo();
+        accountInfo.setLogin(login);
+        return accountInfo;
+      } else {
+        log.error("Cookie expired for {}.", login);
+      }
+    } else {
+      log.error("Account {} not found.", login);
+    }
+    return null;
+  }
+
+  @CachePut(value = "accountInfo")
+  @Transactional
+  public AccountInfo updateAccountInfo(String login) {
+    log.info("Updating token for {}.", login);
+    return getAccountInfo(login);
+  }
+
+  @CacheEvict(value = "accountInfo")
+  public void evictAccountInfo(String login) {}
 }

@@ -3,6 +3,7 @@ package io.ucandoit.nobot.rest;
 import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.dto.CardInfo;
 import io.ucandoit.nobot.service.AccountService;
+import io.ucandoit.nobot.service.CacheService;
 import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,8 @@ import java.util.concurrent.ExecutionException;
 public class AccountResource {
 
   @Resource private AccountService accountService;
+
+  @Resource private CacheService cacheService;
 
   @RequestMapping(
       value = "/info",
@@ -170,6 +173,31 @@ public class AccountResource {
       produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> celebrate9() {
     accountService.celebrate9();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+          value = "/test/{login}",
+          method = RequestMethod.GET,
+          produces = "application/json; charset=UTF-8")
+  public ResponseEntity<AccountInfo> test(@PathVariable String login) {
+    return new ResponseEntity<>(cacheService.getAccountInfo(login), HttpStatus.OK);
+  }
+
+  @RequestMapping(
+          value = "/testUpdate/{login}",
+          method = RequestMethod.GET,
+          produces = "application/json; charset=UTF-8")
+  public ResponseEntity<AccountInfo> testUpdate(@PathVariable String login) {
+    return new ResponseEntity<>(cacheService.updateAccountInfo(login), HttpStatus.OK);
+  }
+
+  @RequestMapping(
+          value = "/testDelete/{login}",
+          method = RequestMethod.GET,
+          produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> testDelete(@PathVariable String login) {
+    cacheService.evictAccountInfo(login);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }

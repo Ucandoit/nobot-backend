@@ -1,0 +1,1 @@
+ALTER TABLE war_config ADD COLUMN war_group VARCHAR(32);

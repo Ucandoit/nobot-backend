@@ -37,4 +37,7 @@ public class WarConfig {
   @Type(type = "jsonb")
   @Column(name = "status")
   private String status;
+
+  @Column(name = "war_group")
+  private String group;
 }
