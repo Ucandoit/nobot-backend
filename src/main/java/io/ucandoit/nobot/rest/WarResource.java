@@ -120,6 +120,18 @@ public class WarResource {
   }
 
   @RequestMapping(
+          value = "/completePreQuest/{login}",
+          method = RequestMethod.GET,
+          produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> completePreQuest(@PathVariable String login, Integer[] questIds) {
+    if (questIds == null || questIds.length == 0) {
+      questIds = new Integer[] {54, 76, 94};
+    }
+    warService.completeQuest(login, Arrays.asList(questIds));
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
       value = "/completeQuest/{login}",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
@@ -128,6 +140,18 @@ public class WarResource {
       questIds = new Integer[] {139, 158, 218, 219, 181, 182};
     }
     warService.completeQuest(login, Arrays.asList(questIds));
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+          value = "/completeQuestByGroup/{group}",
+          method = RequestMethod.GET,
+          produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> completeQuestByGroup(@PathVariable String group, Integer[] questIds) {
+    if (questIds == null || questIds.length == 0) {
+      questIds = new Integer[] {139, 158, 218, 219, 181, 182};
+    }
+    warService.completeQuestByGroup(group, Arrays.asList(questIds));
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 

@@ -33,7 +33,7 @@ public class StoryService {
 
   @Resource private BeanFactory beanFactory;
 
-  private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(50);
+  private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(200);
 
   private Map<String, ScheduledFuture<?>> futureMap = new HashMap<>();
 
@@ -52,7 +52,7 @@ public class StoryService {
   public void stopAll() {
     if (executorService != null) {
       executorService.shutdown();
-      executorService = Executors.newScheduledThreadPool(50);
+      executorService = Executors.newScheduledThreadPool(200);
       futureMap = new HashMap<>();
     }
   }

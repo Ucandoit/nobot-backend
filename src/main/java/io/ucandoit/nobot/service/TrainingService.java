@@ -19,7 +19,7 @@ public class TrainingService {
 
   @Resource private BeanFactory beanFactory;
 
-  private ExecutorService executorService = Executors.newFixedThreadPool(200);
+  private ExecutorService executorService = Executors.newFixedThreadPool(300);
 
   //  private Map<String, Map<String, Future<?>>> futureMap = new HashMap<>();
 

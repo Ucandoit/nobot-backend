@@ -50,7 +50,7 @@ public class WarService {
 
   @Resource private CacheService cacheService;
 
-  private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(50);
+  private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(200);
 
   private ExecutorService questExecutorService = Executors.newFixedThreadPool(50);
 
@@ -80,7 +80,7 @@ public class WarService {
   public void stopAll() {
     if (executorService != null) {
       executorService.shutdown();
-      executorService = Executors.newScheduledThreadPool(50);
+      executorService = Executors.newScheduledThreadPool(200);
       futureMap = new HashMap<>();
     }
   }
@@ -229,6 +229,13 @@ public class WarService {
     completeQuestTask.setLogin(login);
     completeQuestTask.setQuestIds(questIds);
     questExecutorService.submit(completeQuestTask);
+  }
+
+  public void completeQuestByGroup(String group, List<Integer> questIds) {
+    List<WarConfig> warConfigList = warConfigRepository.findByGroup(group);
+    for (WarConfig warConfig: warConfigList) {
+      completeQuest(warConfig.getLogin(), questIds);
+    }
   }
 
   public void checkWar() {

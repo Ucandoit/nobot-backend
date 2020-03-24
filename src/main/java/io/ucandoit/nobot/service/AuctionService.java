@@ -34,7 +34,7 @@ public class AuctionService {
 
   @Resource private BeanFactory beanFactory;
 
-  private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(50);
+  private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(100);
 
   private Map<String, SearchAHTask> taskMap = new HashMap<>();
 
@@ -44,7 +44,7 @@ public class AuctionService {
       log.info("Daily restart.");
       if (executorService != null) {
         executorService.shutdown();
-        executorService = Executors.newScheduledThreadPool(50);
+        executorService = Executors.newScheduledThreadPool(100);
       }
       taskMap = new HashMap<>();
       taskRepository.deleteAll();
