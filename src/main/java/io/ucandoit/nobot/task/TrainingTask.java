@@ -104,7 +104,8 @@ public class TrainingTask implements Runnable {
               areas.stream()
                   .filter(
                       area ->
-                          area.getBuilding().equals(training.getTrainingBuilding())
+                          area.getBuilding() != null
+                              && area.getBuilding().equals(training.getTrainingBuilding())
                               && !area.isRunning())
                   .findFirst();
           if (building.isPresent()) {
