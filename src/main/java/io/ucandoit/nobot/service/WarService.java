@@ -233,7 +233,7 @@ public class WarService {
 
   public void completeQuestByGroup(String group, List<Integer> questIds) {
     List<WarConfig> warConfigList = warConfigRepository.findByGroup(group);
-    for (WarConfig warConfig: warConfigList) {
+    for (WarConfig warConfig : warConfigList) {
       completeQuest(warConfig.getLogin(), questIds);
     }
   }

@@ -72,6 +72,8 @@ public class NobotUtils {
 
   public static final String SERIAL_INPUT = "http://210.140.157.168/user/serial_input.htm";
 
+  public static final String ITEMBOX_LIST_URL = "http://210.140.157.168/itembox_list.json";
+
   /**
    * Get card rarity code from image url
    *

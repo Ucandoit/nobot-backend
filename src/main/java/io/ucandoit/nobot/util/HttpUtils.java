@@ -22,7 +22,7 @@ public class HttpUtils {
     if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
       Optional<String> url = getIframeUrl(response.getBody());
       if (url.isPresent()) {
-//        log.info("Game URL: {}", url.get());
+        //        log.info("Game URL: {}", url.get());
         return getToken(url.get());
       } else {
         log.error("Unable to find the iframe url. Body: {}.", response.getBody());
