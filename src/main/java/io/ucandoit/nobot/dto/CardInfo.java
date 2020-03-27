@@ -16,6 +16,9 @@ public class CardInfo {
   private String property;
   private Military military;
   private boolean tradable;
+  private boolean inAction;
+  private boolean trading;
+  private boolean protect;
   private String imgUrl;
   private String refineTotal;
   private String refineAtk;

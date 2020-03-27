@@ -224,7 +224,10 @@ public class AccountService implements InitializingBean {
               CardInfo cardInfo = new CardInfo();
               cardInfo.setId(img.className().split(" ")[0].replace("face-card-id", ""));
               cardInfo.setName(img.attr("title"));
-              cardInfo.setTradable(!img.hasClass("protected") && !img.hasClass("trade-limit"));
+              cardInfo.setTradable(!img.hasClass("trade-limit"));
+              cardInfo.setProtect(img.hasClass("protected"));
+              cardInfo.setInAction(img.hasClass("action"));
+              cardInfo.setTrading(img.hasClass("trade"));
               cardInfo.setImgUrl(img.attr("src"));
               cardInfo.setMilitary(
                   NobotUtils.getMilitary(card.selectFirst(".militery").attr("src")));
