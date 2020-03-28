@@ -23,4 +23,13 @@ public class RewardResource {
     rewardService.getItemboxReward();
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
+
+  @RequestMapping(
+      value = "/friendCode",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> getFriendCodeReward() {
+    rewardService.getFriendCodeReward();
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
 }

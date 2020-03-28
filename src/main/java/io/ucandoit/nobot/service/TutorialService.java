@@ -23,7 +23,7 @@ public class TutorialService {
 
   private Map<String, Future<?>> futureMap = new HashMap<>();
 
-  private ExecutorService buildExecutorService = Executors.newFixedThreadPool(100);
+  private ExecutorService buildExecutorService = Executors.newFixedThreadPool(200);
 
   private Map<String, Future<?>> buildFutureMap = new HashMap<>();
 

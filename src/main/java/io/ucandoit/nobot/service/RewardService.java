@@ -73,4 +73,40 @@ public class RewardService {
                 .toArray(CompletableFuture[]::new))
         .join();
   }
+
+  public void getFriendCodeReward() {
+    CompletableFuture.runAsync(
+        () ->
+            CompletableFuture.allOf(
+                    accountRepository.findAllWithCookieNotExpired().stream()
+                        .map(
+                            account ->
+                                CompletableFuture.runAsync(
+                                    () -> claimFriendCodeReward(account.getLogin())))
+                        .toArray(CompletableFuture[]::new))
+                .join());
+  }
+
+  public void claimFriendCodeReward(String login) {
+    cacheService
+        .getToken(login)
+        .ifPresent(
+            token -> {
+              log.info("Get friend code reward for {}", login);
+              ResponseEntity<String> response =
+                  httpClient.makePOSTRequest(NobotUtils.FRIEND_CODE_URL, "GET", null, token);
+              JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+              Document doc =
+                  Jsoup.parse(obj.getJSONObject(NobotUtils.FRIEND_CODE_URL).getString("body"));
+              doc.select("form")
+                  .forEach(
+                      form -> {
+                        httpClient.makePOSTRequest(
+                            NobotUtils.FRIEND_CODE_URL,
+                            "POST",
+                            HttpUtils.buildPostData(form),
+                            token);
+                      });
+            });
+  }
 }

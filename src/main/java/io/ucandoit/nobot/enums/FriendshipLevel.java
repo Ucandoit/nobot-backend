@@ -14,6 +14,7 @@ public enum FriendshipLevel {
 
   private String label;
   private int level;
+
   FriendshipLevel(String label, int level) {
     this.label = label;
     this.level = level;

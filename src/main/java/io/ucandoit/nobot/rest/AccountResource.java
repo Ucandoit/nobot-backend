@@ -4,6 +4,7 @@ import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.dto.CardInfo;
 import io.ucandoit.nobot.service.AccountService;
 import io.ucandoit.nobot.service.CacheService;
+import io.ucandoit.nobot.service.RewardService;
 import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,8 @@ public class AccountResource {
   @Resource private AccountService accountService;
 
   @Resource private CacheService cacheService;
+
+  @Resource private RewardService rewardService;
 
   @RequestMapping(
       value = "/info",
@@ -130,7 +133,7 @@ public class AccountResource {
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> inviterReward(@PathVariable String login) {
-    accountService.inviterReward(login);
+    rewardService.claimFriendCodeReward(login);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 
