@@ -223,6 +223,11 @@ public class WarService {
     return warConfigList;
   }
 
+  public void completeQuest(List<Integer> questIds) {
+    accountRepository.findAllWithCookieNotExpired().stream()
+        .forEach(account -> completeQuest(account.getLogin(), questIds));
+  }
+
   public void completeQuest(String login, List<Integer> questIds) {
     CompleteQuestTask completeQuestTask =
         (CompleteQuestTask) beanFactory.getBean("completeQuestTask");

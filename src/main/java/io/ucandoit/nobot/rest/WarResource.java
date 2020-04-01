@@ -157,6 +157,15 @@ public class WarResource {
   }
 
   @RequestMapping(
+      value = "/completeQuestForAll",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> completeQuest(Integer[] questIds) {
+    warService.completeQuest(Arrays.asList(questIds));
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
       value = "/checkWar",
       method = RequestMethod.GET,
       produces = "application/json; charset=UTF-8")

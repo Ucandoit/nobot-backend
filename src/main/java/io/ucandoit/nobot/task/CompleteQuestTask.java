@@ -2,6 +2,7 @@ package io.ucandoit.nobot.task;
 
 import io.ucandoit.nobot.http.HttpClient;
 import io.ucandoit.nobot.service.CacheService;
+import io.ucandoit.nobot.util.NobotUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,6 @@ import java.util.List;
 @Scope("prototype")
 public class CompleteQuestTask implements Runnable {
 
-  private static final String MISSION_URL = "http://210.140.157.168/tutorial/mission.htm";
   @Resource private HttpClient httpClient;
   @Resource private CacheService cacheService;
   private String login;
@@ -29,9 +29,11 @@ public class CompleteQuestTask implements Runnable {
             token -> {
               for (Integer questId : questIds) {
                 log.info("Accept quest {} for {}", questId, login);
-                httpClient.makePOSTRequest(MISSION_URL, "POST", "contract=" + questId, token);
+                httpClient.makePOSTRequest(
+                    NobotUtils.MISSION_URL, "POST", "contract=" + questId, token);
                 log.info("Complete quest {} for {}", questId, login);
-                httpClient.makePOSTRequest(MISSION_URL, "POST", "complete=" + questId, token);
+                httpClient.makePOSTRequest(
+                    NobotUtils.MISSION_URL, "POST", "complete=" + questId, token);
               }
             });
   }

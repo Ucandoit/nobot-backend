@@ -32,6 +32,8 @@ public class NobotUtils {
 
   public static final String TUTORIAL_URL = "http://210.140.157.168/tutorial/tutorial.htm";
 
+  public static final String MISSION_URL = "http://210.140.157.168/tutorial/mission.htm";
+
   public static final String REPORT_LIST_URL = "http://210.140.157.168/report/list.htm";
 
   public static final String COMMAND_URL = "http://210.140.157.168/command.htm";
