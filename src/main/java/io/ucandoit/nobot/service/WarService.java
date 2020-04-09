@@ -318,6 +318,20 @@ public class WarService {
         .join();
   }
 
+  public void goToWarFieldForGroup(String group, String warField) {
+    List<WarConfig> warConfigList = warConfigRepository.findByGroup(group);
+    if (warConfigList != null) {
+      CompletableFuture.allOf(
+              warConfigList.stream()
+                  .map(
+                      warConfig ->
+                          CompletableFuture.runAsync(
+                              () -> goToWarField(warConfig.getLogin(), warField)))
+                  .toArray(CompletableFuture[]::new))
+          .join();
+    }
+  }
+
   public void goToWarField(String login, String warField) {
     cacheService
         .getToken(login)
@@ -335,6 +349,20 @@ public class WarService {
               httpClient.makePOSTRequest(
                   NobotUtils.MAP_URL, "POST", HttpUtils.buildPostData(form), token);
             });
+  }
+
+  public void chooseWarHostForGroup(String group, int warHost) {
+    List<WarConfig> warConfigList = warConfigRepository.findByGroup(group);
+    if (warConfigList != null) {
+      CompletableFuture.allOf(
+              warConfigList.stream()
+                  .map(
+                      warConfig ->
+                          CompletableFuture.runAsync(
+                              () -> chooseWarHost(warConfig.getLogin(), warHost)))
+                  .toArray(CompletableFuture[]::new))
+          .join();
+    }
   }
 
   public void chooseWarHost(String login, int warHost) {

@@ -4,6 +4,7 @@ import io.ucandoit.nobot.model.WarConfig;
 import io.ucandoit.nobot.service.WarService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -179,8 +180,12 @@ public class WarResource {
       method = RequestMethod.POST,
       produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> goToWarField(
-      @RequestParam String login, @RequestParam String warField) {
-    warService.goToWarField(login, warField);
+      @RequestParam String warField, String login, String group) {
+    if (!StringUtils.isEmpty(login)) {
+      warService.goToWarField(login, warField);
+    } else {
+      warService.goToWarFieldForGroup(group, warField);
+    }
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 
@@ -189,8 +194,12 @@ public class WarResource {
       method = RequestMethod.POST,
       produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> chooseWarHost(
-      @RequestParam String login, @RequestParam int warHost) {
-    warService.chooseWarHost(login, warHost);
+      @RequestParam int warHost, String login, String group) {
+    if (!StringUtils.isEmpty(login)) {
+      warService.chooseWarHost(login, warHost);
+    } else {
+      warService.chooseWarHostForGroup(group, warHost);
+    }
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 
