@@ -47,6 +47,9 @@ public class NobotUtils {
   public static final String GET_BOOK_DETAIL =
       "http://210.140.157.168/card/sub/get_books_detail.htm";
 
+  public static final String GET_REWARD_CARD_DETAIL =
+      "http://210.140.157.168/card/sub/get_reward_card_detail.htm";
+
   public static final String RECRUIT_CARD_URL = "http://210.140.157.168/card/sub/recurit_card.htm";
 
   public static final String MANAGE_DECK_URL = "http://210.140.157.168/card/manage_deck.htm";

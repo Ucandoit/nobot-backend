@@ -33,11 +33,20 @@ public class CardResource {
   }
 
   @RequestMapping(
-          value = "/scan-books/all",
-          method = RequestMethod.GET,
-          produces = "application/json; charset=UTF-8")
+      value = "/scan-books/all",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
   public ResponseEntity scanBooksForAll() {
     cardService.scanBooksForAll();
+    return new ResponseEntity(HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/scan/all",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity scanForAll() {
+    cardService.scanForAll();
     return new ResponseEntity(HttpStatus.OK);
   }
 }

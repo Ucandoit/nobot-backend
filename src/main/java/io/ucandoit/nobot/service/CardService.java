@@ -98,6 +98,42 @@ public class CardService {
         });
   }
 
+  public void scanForAll() {
+    CompletableFuture.runAsync(
+        () -> {
+          int cardId = 1;
+          while (cardId < 2100) {
+            if (!cardRepository.existsById(cardId)) {
+              log.info("Add card by id {}.", cardId);
+              int finalCardId = cardId;
+              cacheService
+                  .getToken("xzdykerik")
+                  .ifPresent(
+                      token -> {
+                        ResponseEntity<String> response =
+                            httpClient.makePOSTRequest(
+                                NobotUtils.GET_REWARD_CARD_DETAIL,
+                                "POST",
+                                "cardid=" + finalCardId,
+                                token);
+                        JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
+                        Document doc =
+                            Jsoup.parse(
+                                obj.getJSONObject(NobotUtils.GET_REWARD_CARD_DETAIL)
+                                    .getString("body"));
+                        if (doc.select(".card") != null) {
+                          Card card = fromDetail(doc);
+                          card.setId(finalCardId);
+                          card.setNumber(9999);
+                          cardRepository.save(card);
+                        }
+                      });
+            }
+            cardId++;
+          }
+        });
+  }
+
   private Integer scanBooksPage(String token, int page) {
     String url = NobotUtils.MANAGE_BOOKS + "?pages=" + page;
     ResponseEntity<String> response = httpClient.makePOSTRequest(url, "GET", null, token);
@@ -131,62 +167,16 @@ public class CardService {
     }
     if (!cardRepository.existsById(cardId)) {
       log.info("Save new card {}", element.selectFirst(".books-name").text());
-      Card card = new Card();
-      card.setId(cardId);
-      card.setNumber(
-          Integer.parseInt(element.selectFirst(".books-number").text().replace("No.", "")));
-      card.setFaceUrl(element.selectFirst(".books-catface").attr("src"));
       ResponseEntity<String> response =
           httpClient.makePOSTRequest(NobotUtils.GET_BOOK_DETAIL, "POST", "cardid=" + cardId, token);
       JSONObject obj = HttpUtils.responseToJsonObject(response.getBody());
       Document doc = Jsoup.parse(obj.getJSONObject(NobotUtils.GET_BOOK_DETAIL).getString("body"));
-      card.setIllustUrl(doc.selectFirst(".card-illust").attr("src"));
-      card.setProperty(NobotUtils.getProperty(doc.selectFirst(".card-property").attr("src")));
-      Element rarity = doc.selectFirst(".card-rarity");
-      if (rarity != null) {
-        card.setRarity(NobotUtils.getRarity(rarity.attr("src")));
-        card.setStar(NobotUtils.getStar(rarity.attr("src")));
-      } else {
-        card.setRarity(NobotUtils.getRarity(1));
-        card.setStar(0);
-      }
-      card.setMilitary(NobotUtils.getMilitary(doc.selectFirst(".card-military").attr("src")));
-      card.setInitialAtk(
-          NobotUtils.imagesToNumber(
-              doc.select(".card-ability-atk img").stream()
-                  .map(img -> img.attr("src"))
-                  .collect(Collectors.toList())));
-      card.setInitialDef(
-          NobotUtils.imagesToNumber(
-              doc.select(".card-ability-def img").stream()
-                  .map(img -> img.attr("src"))
-                  .collect(Collectors.toList())));
-      card.setInitialSpd(
-          NobotUtils.imagesToNumber(
-              doc.select(".card-ability-spd img").stream()
-                  .map(img -> img.attr("src"))
-                  .collect(Collectors.toList())));
-      card.setInitialVir(
-          NobotUtils.imagesToNumber(
-              doc.select(".card-ability-vir img").stream()
-                  .map(img -> img.attr("src"))
-                  .collect(Collectors.toList())));
-      card.setInitialStg(
-          NobotUtils.imagesToNumber(
-              doc.select(".card-ability-stg img").stream()
-                  .map(img -> img.attr("src"))
-                  .collect(Collectors.toList())));
-      card.setCost(
-          NobotUtils.imagesToCost(
-              doc.select(".card-cost img").stream()
-                  .map(img -> img.attr("src"))
-                  .collect(Collectors.toList())));
-      card.setName(doc.selectFirst(".card-name").text());
-      card.setRealName(doc.selectFirst(".card-real-name").text());
-      card.setPersonality(doc.selectFirst(".card-personality").text());
-      card.setJob(doc.selectFirst(".card-job").text());
-      card.setSlogan(doc.selectFirst(".card-slogan").text());
-      card.setHistory(doc.selectFirst(".card-history").text());
+      Card card = fromDetail(doc);
+      card.setId(cardId);
+      card.setNumber(
+          Integer.parseInt(element.selectFirst(".books-number").text().replace("No.", "")));
+      card.setFaceUrl(element.selectFirst(".books-catface").attr("src"));
+      // elements only exist in book detail
       card.setFinalAtk(
           NobotUtils.imagesToNumber(
               doc.select(".rcard-ability-atk img").stream()
@@ -215,5 +205,57 @@ public class CardService {
       card.setTrainSkills(doc.selectFirst(".card-train-skill-name").text());
       cardRepository.save(card);
     }
+  }
+
+  private Card fromDetail(Element doc) {
+    Card card = new Card();
+    card.setIllustUrl(doc.selectFirst(".card-illust").attr("src"));
+    card.setProperty(NobotUtils.getProperty(doc.selectFirst(".card-property").attr("src")));
+    Element rarity = doc.selectFirst(".card-rarity");
+    if (rarity != null) {
+      card.setRarity(NobotUtils.getRarity(rarity.attr("src")));
+      card.setStar(NobotUtils.getStar(rarity.attr("src")));
+    } else {
+      card.setRarity(NobotUtils.getRarity(1));
+      card.setStar(0);
+    }
+    card.setMilitary(NobotUtils.getMilitary(doc.selectFirst(".card-military").attr("src")));
+    card.setInitialAtk(
+        NobotUtils.imagesToNumber(
+            doc.select(".card-ability-atk img").stream()
+                .map(img -> img.attr("src"))
+                .collect(Collectors.toList())));
+    card.setInitialDef(
+        NobotUtils.imagesToNumber(
+            doc.select(".card-ability-def img").stream()
+                .map(img -> img.attr("src"))
+                .collect(Collectors.toList())));
+    card.setInitialSpd(
+        NobotUtils.imagesToNumber(
+            doc.select(".card-ability-spd img").stream()
+                .map(img -> img.attr("src"))
+                .collect(Collectors.toList())));
+    card.setInitialVir(
+        NobotUtils.imagesToNumber(
+            doc.select(".card-ability-vir img").stream()
+                .map(img -> img.attr("src"))
+                .collect(Collectors.toList())));
+    card.setInitialStg(
+        NobotUtils.imagesToNumber(
+            doc.select(".card-ability-stg img").stream()
+                .map(img -> img.attr("src"))
+                .collect(Collectors.toList())));
+    card.setCost(
+        NobotUtils.imagesToCost(
+            doc.select(".card-cost img").stream()
+                .map(img -> img.attr("src"))
+                .collect(Collectors.toList())));
+    card.setName(doc.selectFirst(".card-name").text());
+    card.setRealName(doc.selectFirst(".card-real-name").text());
+    card.setPersonality(doc.selectFirst(".card-personality").text());
+    card.setJob(doc.selectFirst(".card-job").text());
+    card.setSlogan(doc.selectFirst(".card-slogan").text());
+    card.setHistory(doc.selectFirst(".card-history").text());
+    return card;
   }
 }

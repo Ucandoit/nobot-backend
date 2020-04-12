@@ -5,10 +5,9 @@ public class AccountCard {
   private boolean storage;
   private int storageCount;
 
-  /**
-   * 勲功値
-   */
+  /** 勲功値 */
   private int deed;
+
   private int refineMax;
   private int refineCurrent;
   private int refineLvlAtk;
