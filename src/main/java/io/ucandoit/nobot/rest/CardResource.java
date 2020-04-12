@@ -22,4 +22,22 @@ public class CardResource {
       @PathVariable String cardId, @RequestParam String login) {
     return new ResponseEntity<>(cardService.getCardInfo(login, cardId), HttpStatus.OK);
   }
+
+  @RequestMapping(
+      value = "/scan-books/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity scanBooks(@PathVariable String login) {
+    cardService.scanBooks(login);
+    return new ResponseEntity(HttpStatus.OK);
+  }
+
+  @RequestMapping(
+          value = "/scan-books/all",
+          method = RequestMethod.GET,
+          produces = "application/json; charset=UTF-8")
+  public ResponseEntity scanBooksForAll() {
+    cardService.scanBooksForAll();
+    return new ResponseEntity(HttpStatus.OK);
+  }
 }

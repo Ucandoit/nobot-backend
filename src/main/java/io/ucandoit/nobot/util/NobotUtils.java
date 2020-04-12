@@ -2,10 +2,10 @@ package io.ucandoit.nobot.util;
 
 import io.ucandoit.nobot.dto.AccountInfo;
 import io.ucandoit.nobot.dto.ResourceCost;
-import io.ucandoit.nobot.enums.Military;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.nodes.Element;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +41,11 @@ public class NobotUtils {
   public static final String MANAGE_CARD_URL = "http://210.140.157.168/card/manage_card.htm";
 
   public static final String MANAGE_STORE_CARD_URL = MANAGE_CARD_URL + "?status=2";
+
+  public static final String MANAGE_BOOKS = "http://210.140.157.168/card/manage_books.htm";
+
+  public static final String GET_BOOK_DETAIL =
+      "http://210.140.157.168/card/sub/get_books_detail.htm";
 
   public static final String RECRUIT_CARD_URL = "http://210.140.157.168/card/sub/recurit_card.htm";
 
@@ -89,6 +94,16 @@ public class NobotUtils {
       return Integer.parseInt(matcher.group(2));
     } else {
       return -1;
+    }
+  }
+
+  public static int getStar(String img) {
+    Pattern pattern = Pattern.compile("(.+_star0)([0-9])(_.+)");
+    Matcher matcher = pattern.matcher(img);
+    if (matcher.find()) {
+      return Integer.parseInt(matcher.group(2));
+    } else {
+      return 0;
     }
   }
 
@@ -194,15 +209,15 @@ public class NobotUtils {
     }
   }
 
-  public static Military getMilitary(String img) {
+  public static String getMilitary(String img) {
     if (img.contains("mounted")) {
-      return Military.Mounted;
+      return "騎馬";
     } else if (img.contains("soldier")) {
-      return Military.Soldier;
+      return "足軽";
     } else if (img.contains("gunner")) {
-      return Military.Gunner;
+      return "鉄砲";
     }
-    return Military.Unknown;
+    return "";
   }
 
   public static boolean costEnough(ResourceCost buildCost, AccountInfo accountInfo) {
@@ -211,5 +226,35 @@ public class NobotUtils {
         && buildCost.getWind() <= accountInfo.getWind()
         && buildCost.getWater() <= accountInfo.getWater()
         && buildCost.getSky() <= accountInfo.getSky();
+  }
+
+  public static int imagesToNumber(List<String> images) {
+    int total = 0;
+    for (int i = images.size() - 1; i >= 0; i--) {
+      total += imageToNumber(images.get(i), "num_param_") * Math.pow(10, images.size() - i - 1);
+    }
+    return total;
+  }
+
+  public static float imagesToCost(List<String> images) {
+    String floatString = "";
+    for (String img : images) {
+      if (img.contains("num_cost_dot")) {
+        floatString += ".";
+      } else {
+        floatString += imageToNumber(img, "num_cost_");
+      }
+    }
+    return Float.parseFloat(floatString);
+  }
+
+  private static int imageToNumber(String img, String prePattern) {
+    Pattern pattern = Pattern.compile("(.+" + prePattern + ")([0-9])(_.+)");
+    Matcher matcher = pattern.matcher(img);
+    int number = 0;
+    if (matcher.find()) {
+      number = Integer.parseInt(matcher.group(2));
+    }
+    return number;
   }
 }
