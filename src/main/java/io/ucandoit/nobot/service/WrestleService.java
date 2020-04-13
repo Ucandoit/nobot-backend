@@ -2,6 +2,7 @@ package io.ucandoit.nobot.service;
 
 import io.ucandoit.nobot.model.Account;
 import io.ucandoit.nobot.repository.AccountRepository;
+import io.ucandoit.nobot.task.CountryWrestleTask;
 import io.ucandoit.nobot.task.WrestleTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
@@ -11,10 +12,7 @@ import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Service
 @Slf4j
@@ -26,7 +24,11 @@ public class WrestleService {
 
   private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(50);
 
+  private ExecutorService countryWrestleExecutorService = Executors.newFixedThreadPool(100);
+
   private Map<String, ScheduledFuture<?>> futureMap = new HashMap<>();
+
+  private Map<String, Future<?>> countryWrestleMap = new HashMap<>();
 
   public void startWrestling(String login) {
     Account account = accountRepository.getOne(login);
@@ -51,6 +53,29 @@ public class WrestleService {
 
   public void stopWrestling(String login) {
     ScheduledFuture<?> future = futureMap.get(login);
+    if (future != null && !future.isDone()) {
+      future.cancel(true);
+    }
+  }
+
+  public void startCountryWrestling(String login, Integer times) {
+    Future<?> future = countryWrestleMap.get(login);
+    if (future != null && !future.isDone()) {
+      future.cancel(true);
+    }
+    CountryWrestleTask countryWrestleTask =
+        (CountryWrestleTask) beanFactory.getBean("countryWrestleTask");
+    countryWrestleTask.setLogin(login);
+    if (times != null) {
+      countryWrestleTask.setTimes(times);
+    }
+    future = countryWrestleExecutorService.submit(countryWrestleTask);
+    countryWrestleMap.put(login, future);
+  }
+
+  public void stopCountryWrestling(String login) {
+    log.info("Stop country wrestle for {}.", login);
+    Future<?> future = countryWrestleMap.get(login);
     if (future != null && !future.isDone()) {
       future.cancel(true);
     }

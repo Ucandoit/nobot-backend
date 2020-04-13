@@ -84,6 +84,8 @@ public class NobotUtils {
 
   public static final String ITEMBOX_LIST_URL = "http://210.140.157.168/itembox_list.json";
 
+  public static final String COUNTRY_BATTLE_URL = "http://210.140.157.168/battle/mock_setup.htm";
+
   /**
    * Get card rarity code from image url
    *

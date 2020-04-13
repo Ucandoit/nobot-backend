@@ -3,10 +3,7 @@ package io.ucandoit.nobot.rest;
 import io.ucandoit.nobot.service.WrestleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -31,6 +28,24 @@ public class WrestleResource {
       produces = "application/json; charset=UTF-8")
   public ResponseEntity<Boolean> stopWrestling(@RequestParam String login) {
     wrestleService.stopWrestling(login);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/country/start/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> startCountryWrestling(@PathVariable String login, Integer times) {
+    wrestleService.startCountryWrestling(login, times);
+    return new ResponseEntity<>(true, HttpStatus.OK);
+  }
+
+  @RequestMapping(
+      value = "/country/stop/{login}",
+      method = RequestMethod.GET,
+      produces = "application/json; charset=UTF-8")
+  public ResponseEntity<Boolean> stopCountryWrestling(@PathVariable String login) {
+    wrestleService.stopCountryWrestling(login);
     return new ResponseEntity<>(true, HttpStatus.OK);
   }
 }
